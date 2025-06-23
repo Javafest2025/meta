@@ -1,3 +1,6 @@
 [submodule "Frontend"]
 	path = Frontend
 	url = https://github.com/Javafest2025/frontend.git
+[submodule "Microservices/user-service"]
+	path = Microservices/user-service
+	url = https://github.com/Javafest2025/user_service.git
