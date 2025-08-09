@@ -4,3 +4,12 @@
 [submodule "Microservices/user-service"]
 	path = Microservices/user-service
 	url = https://github.com/Javafest2025/user_service.git
+[submodule "Microservices/api-gateway"]
+	path = Microservices/api-gateway
+	url = https://github.com/Javafest2025/api_gateway.git
+[submodule "Microservices/notification-service"]
+	path = Microservices/notification-service
+	url = https://github.com/Javafest2025/notification_service.git
+[submodule "Microservices/service-registry"]
+	path = Microservices/service-registry
+	url = https://github.com/Javafest2025/service_registry.git
