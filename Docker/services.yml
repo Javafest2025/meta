@@ -9,6 +9,8 @@ services:
       POSTGRES_DB: userDB
     ports:
       - "${USER_DB_PORT}:5432"
+    volumes:
+      - user-postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${USER_DB_USER} -d userDB"]
       interval: 10s
@@ -27,13 +29,35 @@ services:
       POSTGRES_DB: notificationDB
     ports:
         - "${NOTIFICATION_DB_PORT}:5432"
+    volumes:
+      - notification-postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${NOTIFICATION_DB_USER} -d notificationDB"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - scholarai-network      
+      - scholarai-network
+
+  project-postgres:
+    image: 'postgres:17-alpine'
+    container_name: project-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${PROJECT_DB_USER}
+      POSTGRES_PASSWORD: ${PROJECT_DB_PASSWORD}
+      POSTGRES_DB: projectDB
+    ports:
+        - "${PROJECT_DB_PORT}:5432"
+    volumes:
+      - project-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PROJECT_DB_USER} -d projectDB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - scholarai-network              
 
   rabbitmq:
     image: 'rabbitmq:4.1.0-management-alpine'
@@ -73,7 +97,10 @@ services:
       - scholarai-network
 
 volumes:
-  user-redis-data:      
+  user-redis-data:
+  user-postgres-data:
+  notification-postgres-data:
+  project-postgres-data:      
 
 
 networks:
