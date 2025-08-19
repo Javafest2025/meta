@@ -19,16 +19,14 @@ NC='\033[0m'
 ###############################################################################
 # Paths & constants
 ###############################################################################
-ROOT_DIR="$(dirname "$0")/.."
-PARENT_DIR="$(dirname "$ROOT_DIR)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 DOCKER_APP="$ROOT_DIR/Docker/apps.yml"
 DOCKER_SERVICES="$ROOT_DIR/Docker/services.yml"
 DOCKER_ENV="$ROOT_DIR/Docker/.env"
-COMPOSE_STACK="-f \"$DOCKER_SERVICES\" -f \"$DOCKER_APP\""
 
 # Load environment variables from Docker .env file
 if [[ -f "$DOCKER_ENV" ]]; then
-    # Source the .env file to load variables
     set -a
     source "$DOCKER_ENV"
     set +a
@@ -55,7 +53,7 @@ wait_for_service() {
     local max_attempts=30
     local attempt=1
     
-    echo -e "${YELLOW}Waiting for $service_name to be ready...${NC}"
+    echo -e "${YELLOW}Waiting for $service_name to be ready on port $port...${NC}"
     
     while [ $attempt -le $max_attempts ]; do
         if curl -s "http://localhost:$port/actuator/health" > /dev/null 2>&1; then
@@ -72,56 +70,48 @@ wait_for_service() {
     return 1
 }
 
-get_container_info() {
-    # Infrastructure services
-    echo "user-db:${USER_DB_PORT:-5433}:5432|notification-db:${NOTIFICATION_DB_PORT:-5434}:5432|project-db:${PROJECT_DB_PORT:-5435}:5432|user-rabbitmq:${USER_RABBITMQ_AMQP_PORT:-5672}:5672|user-redis:${USER_REDIS_PORT:-6379}:6379"
-}
-
-get_app_info() {
-    # Application services
-    echo "scholar-service-registry:8761:8761|scholar-api-gateway:8989:8989|scholar-notification-service:8082:8082|scholar-project-service:8083:8083|scholar-user-service:8081:8081|scholar-frontend:3000:3000"
-}
-
-print_container_status() {
-    local container_info="$1"
-    local status="$2"
-    local type="$3"
+wait_for_frontend() {
+    local max_attempts=30
+    local attempt=1
     
-    if [[ -z "$container_info" ]]; then
-        echo -e "${YELLOW}No container information available${NC}"
-        return
-    fi
+    echo -e "${YELLOW}Waiting for Frontend to be ready on port 3000...${NC}"
     
-    # Split the container info and print each one
-    IFS='|' read -ra CONTAINERS <<< "$container_info"
-    
-    for container in "${CONTAINERS[@]}"; do
-        if [[ -n "$container" ]]; then
-            # Split container:port info
-            IFS=':' read -ra PARTS <<< "$container"
-            local container_name="${PARTS[0]}"
-            local external_port="${PARTS[1]}"
-            local internal_port="${PARTS[2]}"
-            
-            if [[ -n "$container_name" ]]; then
-                case "$status" in
-                    "started")
-                        if [[ -n "$external_port" && "$external_port" != "unknown" ]]; then
-                            echo -e "${GREEN}✓ $container_name → localhost:$external_port${NC}"
-                        else
-                            echo -e "${GREEN}✓ $container_name${NC}"
-                        fi
-                        ;;
-                    "stopped")
-                        echo -e "${RED}✗ $container_name${NC}"
-                        ;;
-                    *)
-                        echo -e "${CYAN}• $container_name${NC}"
-                        ;;
-                esac
-            fi
+    while [ $attempt -le $max_attempts ]; do
+        if curl -s "http://localhost:3000" > /dev/null 2>&1; then
+            echo -e "${GREEN}✓ Frontend is ready!${NC}"
+            return 0
         fi
+        
+        echo -e "${YELLOW}Attempt $attempt/$max_attempts: Frontend not ready yet...${NC}"
+        sleep 10
+        attempt=$((attempt + 1))
     done
+    
+    echo -e "${RED}✗ Frontend failed to start within timeout${NC}"
+    return 1
+}
+
+print_service_status() {
+    local service_name="$1"
+    local port="$2"
+    
+    if curl -s "http://localhost:$port/actuator/health" > /dev/null 2>&1; then
+        echo -e "${GREEN}✓ $service_name (localhost:$port)${NC}"
+        return 0
+    else
+        echo -e "${RED}✗ $service_name (localhost:$port)${NC}"
+        return 1
+    fi
+}
+
+print_frontend_status() {
+    if curl -s "http://localhost:3000" > /dev/null 2>&1; then
+        echo -e "${GREEN}✓ Frontend (localhost:3000)${NC}"
+        return 0
+    else
+        echo -e "${RED}✗ Frontend (localhost:3000)${NC}"
+        return 1
+    fi
 }
 
 ###############################################################################
@@ -129,36 +119,39 @@ print_container_status() {
 ###############################################################################
 start_infrastructure() {
     print_step "1" "Starting infrastructure services (Databases, RabbitMQ, Redis)..."
-    # Change to parent directory for Docker Compose
-    cd "$PARENT_DIR"
-    docker compose -f "$DOCKER_SERVICES" up -d
     
-    if [[ $? -eq 0 ]]; then
+    cd "$ROOT_DIR"
+    
+    if docker compose -f "$DOCKER_SERVICES" up -d; then
         echo -e "${GREEN}✓ Infrastructure services started successfully!${NC}"
-        echo -e "${CYAN}Infrastructure endpoints:${NC}"
-        local container_info=$(get_container_info)
-        print_container_status "$container_info" "started" "infrastructure"
+        echo -e "${CYAN}Infrastructure services:${NC}"
+        echo -e "${GREEN}• user-db:${NC} localhost:5433"
+        echo -e "${GREEN}• notification-db:${NC} localhost:5434"
+        echo -e "${GREEN}• project-db:${NC} localhost:5435"
+        echo -e "${GREEN}• user-rabbitmq:${NC} localhost:5672"
+        echo -e "${GREEN}• user-redis:${NC} localhost:6379"
         
         # Wait for infrastructure to be ready
-        echo -e "${YELLOW}Waiting 10 seconds for infrastructure to stabilize...${NC}"
-        sleep 10
+        echo -e "${YELLOW}Waiting 15 seconds for infrastructure to stabilize...${NC}"
+        sleep 15
+        return 0
     else
         echo -e "${RED}✗ Failed to start infrastructure services${NC}"
-        exit 1
+        return 1
     fi
 }
 
 stop_infrastructure() {
     print_step "1" "Stopping infrastructure services..."
-    # Change to parent directory for Docker Compose
-    cd "$PARENT_DIR"
-    docker compose -f "$DOCKER_SERVICES" down
     
-    if [[ $? -eq 0 ]]; then
+    cd "$ROOT_DIR"
+    
+    if docker compose -f "$DOCKER_SERVICES" down; then
         echo -e "${GREEN}✓ Infrastructure services stopped successfully!${NC}"
+        return 0
     else
         echo -e "${RED}✗ Failed to stop infrastructure services${NC}"
-        exit 1
+        return 1
     fi
 }
 
@@ -166,61 +159,103 @@ stop_infrastructure() {
 # Application Management
 ###############################################################################
 start_applications() {
-    print_step "2" "Starting application services..."
+    print_step "2" "Starting application services in sequence..."
     
-    # Change to parent directory for Docker Compose
-    cd "$PARENT_DIR"
+    cd "$ROOT_DIR"
     
-    # Start service registry first
+    # 1. Service Registry
     print_step "2.1" "Starting Service Registry..."
-    docker compose -f "$DOCKER_APP" up -d service-registry
-    if ! wait_for_service "Service Registry" "8761"; then
-        echo -e "${RED}✗ Service Registry failed to start${NC}"
-        exit 1
-    fi
-    
-    # Start API Gateway
-    print_step "2.2" "Starting API Gateway..."
-    docker compose -f "$DOCKER_APP" up -d api-gateway
-    if ! wait_for_service "API Gateway" "8989"; then
-        echo -e "${RED}✗ API Gateway failed to start${NC}"
-        exit 1
-    fi
-    
-    # Start microservices in parallel
-    print_step "2.3" "Starting microservices (Notification, Project)..."
-    docker compose -f "$DOCKER_APP" up -d notification-service project-service
-    
-    # Wait for microservices to be ready
-    echo -e "${YELLOW}Waiting for microservices to be ready...${NC}"
-    sleep 15
-    
-    # Start frontend last
-    print_step "2.4" "Starting Frontend..."
-    docker compose -f "$DOCKER_APP" up -d frontend
-    
-    if [[ $? -eq 0 ]]; then
-        echo -e "${GREEN}✓ All application services started successfully!${NC}"
-        echo -e "${CYAN}Application endpoints:${NC}"
-        local app_info=$(get_app_info)
-        print_container_status "$app_info" "started" "application"
+    if docker compose -f "$DOCKER_APP" up -d service-registry; then
+        echo -e "${GREEN}✓ Service Registry started${NC}"
+        if ! wait_for_service "Service Registry" "8761"; then
+            echo -e "${RED}✗ Service Registry failed to become ready${NC}"
+            return 1
+        fi
     else
-        echo -e "${RED}✗ Failed to start some application services${NC}"
-        exit 1
+        echo -e "${RED}✗ Failed to start Service Registry${NC}"
+        return 1
     fi
+    
+    # 2. API Gateway
+    print_step "2.2" "Starting API Gateway..."
+    if docker compose -f "$DOCKER_APP" up -d api-gateway; then
+        echo -e "${GREEN}✓ API Gateway started${NC}"
+        if ! wait_for_service "API Gateway" "8989"; then
+            echo -e "${RED}✗ API Gateway failed to become ready${NC}"
+            return 1
+        fi
+    else
+        echo -e "${RED}✗ Failed to start API Gateway${NC}"
+        return 1
+    fi
+    
+    # 3. Notification Service
+    print_step "2.3" "Starting Notification Service..."
+    if docker compose -f "$DOCKER_APP" up -d notification-service; then
+        echo -e "${GREEN}✓ Notification Service started${NC}"
+        if ! wait_for_service "Notification Service" "8082"; then
+            echo -e "${RED}✗ Notification Service failed to become ready${NC}"
+            return 1
+        fi
+    else
+        echo -e "${RED}✗ Failed to start Notification Service${NC}"
+        return 1
+    fi
+    
+    # 4. Project Service
+    print_step "2.4" "Starting Project Service..."
+    if docker compose -f "$DOCKER_APP" up -d project-service; then
+        echo -e "${GREEN}✓ Project Service started${NC}"
+        if ! wait_for_service "Project Service" "8083"; then
+            echo -e "${RED}✗ Project Service failed to become ready${NC}"
+            return 1
+        fi
+    else
+        echo -e "${RED}✗ Failed to start Project Service${NC}"
+        return 1
+    fi
+    
+    # 5. User Service
+    print_step "2.5" "Starting User Service..."
+    if docker compose -f "$DOCKER_APP" up -d user-service; then
+        echo -e "${GREEN}✓ User Service started${NC}"
+        if ! wait_for_service "User Service" "8081"; then
+            echo -e "${RED}✗ User Service failed to become ready${NC}"
+            return 1
+        fi
+    else
+        echo -e "${RED}✗ Failed to start User Service${NC}"
+        return 1
+    fi
+    
+    # 6. Frontend
+    print_step "2.6" "Starting Frontend..."
+    if docker compose -f "$DOCKER_APP" up -d frontend; then
+        echo -e "${GREEN}✓ Frontend started${NC}"
+        if ! wait_for_frontend; then
+            echo -e "${RED}✗ Frontend failed to become ready${NC}"
+            return 1
+        fi
+    else
+        echo -e "${RED}✗ Failed to start Frontend${NC}"
+        return 1
+    fi
+    
+    echo -e "${GREEN}✓ All application services started successfully!${NC}"
+    return 0
 }
 
 stop_applications() {
     print_step "2" "Stopping application services..."
-    # Change to parent directory for Docker Compose
-    cd "$PARENT_DIR"
-    docker compose -f "$DOCKER_APP" down
     
-    if [[ $? -eq 0 ]]; then
+    cd "$ROOT_DIR"
+    
+    if docker compose -f "$DOCKER_APP" down; then
         echo -e "${GREEN}✓ Application services stopped successfully!${NC}"
+        return 0
     else
         echo -e "${RED}✗ Failed to stop application services${NC}"
-        exit 1
+        return 1
     fi
 }
 
@@ -230,6 +265,8 @@ stop_applications() {
 start_service() {
     local service="$1"
     
+    cd "$ROOT_DIR"
+    
     case "$service" in
         "infra"|"infrastructure")
             start_infrastructure
@@ -238,35 +275,41 @@ start_service() {
             start_applications
             ;;
         "service-registry")
-            cd "$PARENT_DIR"
+            echo -e "${CYAN}Starting Service Registry...${NC}"
             docker compose -f "$DOCKER_APP" up -d service-registry
             ;;
         "api-gateway")
-            cd "$PARENT_DIR"
+            echo -e "${CYAN}Starting API Gateway...${NC}"
             docker compose -f "$DOCKER_APP" up -d api-gateway
             ;;
         "notification")
-            cd "$PARENT_DIR"
+            echo -e "${CYAN}Starting Notification Service...${NC}"
             docker compose -f "$DOCKER_APP" up -d notification-service
             ;;
         "project")
-            cd "$PARENT_DIR"
+            echo -e "${CYAN}Starting Project Service...${NC}"
             docker compose -f "$DOCKER_APP" up -d project-service
             ;;
+        "user")
+            echo -e "${CYAN}Starting User Service...${NC}"
+            docker compose -f "$DOCKER_APP" up -d user-service
+            ;;
         "frontend")
-            cd "$PARENT_DIR"
+            echo -e "${CYAN}Starting Frontend...${NC}"
             docker compose -f "$DOCKER_APP" up -d frontend
             ;;
         *)
             echo -e "${RED}Unknown service: $service${NC}"
-            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, frontend${NC}"
-            exit 1
+            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, frontend${NC}"
+            return 1
             ;;
     esac
 }
 
 stop_service() {
     local service="$1"
+    
+    cd "$ROOT_DIR"
     
     case "$service" in
         "infra"|"infrastructure")
@@ -276,25 +319,33 @@ stop_service() {
             stop_applications
             ;;
         "service-registry")
+            echo -e "${CYAN}Stopping Service Registry...${NC}"
             docker compose -f "$DOCKER_APP" stop service-registry
             ;;
         "api-gateway")
+            echo -e "${CYAN}Stopping API Gateway...${NC}"
             docker compose -f "$DOCKER_APP" stop api-gateway
             ;;
         "notification")
+            echo -e "${CYAN}Stopping Notification Service...${NC}"
             docker compose -f "$DOCKER_APP" stop notification-service
             ;;
         "project")
+            echo -e "${CYAN}Stopping Project Service...${NC}"
             docker compose -f "$DOCKER_APP" stop project-service
             ;;
-
+        "user")
+            echo -e "${CYAN}Stopping User Service...${NC}"
+            docker compose -f "$DOCKER_APP" stop user-service
+            ;;
         "frontend")
+            echo -e "${CYAN}Stopping Frontend...${NC}"
             docker compose -f "$DOCKER_APP" stop frontend
             ;;
         *)
             echo -e "${RED}Unknown service: $service${NC}"
-            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, frontend${NC}"
-            exit 1
+            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, frontend${NC}"
+            return 1
             ;;
     esac
 }
@@ -307,10 +358,16 @@ start_all() {
     print_step "1" "Starting complete ScholarAI platform..."
     
     # Start infrastructure first
-    start_infrastructure
+    if ! start_infrastructure; then
+        echo -e "${RED}✗ Failed to start infrastructure. Aborting.${NC}"
+        exit 1
+    fi
     
     # Start applications
-    start_applications
+    if ! start_applications; then
+        echo -e "${RED}✗ Failed to start applications. Aborting.${NC}"
+        exit 1
+    fi
     
     echo -e "${GREEN}🎉 ScholarAI platform is now running!${NC}"
     echo -e "${CYAN}Access points:${NC}"
@@ -325,10 +382,14 @@ stop_all() {
     print_step "1" "Stopping complete ScholarAI platform..."
     
     # Stop applications first
-    stop_applications
+    if ! stop_applications; then
+        echo -e "${YELLOW}Warning: Some application services failed to stop${NC}"
+    fi
     
     # Stop infrastructure
-    stop_infrastructure
+    if ! stop_infrastructure; then
+        echo -e "${YELLOW}Warning: Some infrastructure services failed to stop${NC}"
+    fi
     
     echo -e "${GREEN}✓ ScholarAI platform stopped successfully!${NC}"
 }
@@ -349,8 +410,7 @@ status() {
     print_header
     echo -e "${CYAN}▶ Current platform status:${NC}"
     
-    # Change to parent directory for Docker Compose
-    cd "$PARENT_DIR"
+    cd "$ROOT_DIR"
     
     # Infrastructure status
     echo -e "\n${BLUE}Infrastructure Services:${NC}"
@@ -360,23 +420,35 @@ status() {
     echo -e "\n${BLUE}Application Services:${NC}"
     docker compose -f "$DOCKER_APP" ps
     
-    # Container endpoints
-    echo -e "\n${CYAN}Infrastructure endpoints:${NC}"
-    local container_info=$(get_container_info)
-    print_container_status "$container_info" "status" "infrastructure"
+    # Health check status
+    echo -e "\n${BLUE}Service Health Status:${NC}"
+    print_service_status "Service Registry" "8761"
+    print_service_status "API Gateway" "8989"
+    print_service_status "Notification Service" "8082"
+    print_service_status "Project Service" "8083"
+    print_service_status "User Service" "8081"
+    print_frontend_status
     
-    echo -e "\n${CYAN}Application endpoints:${NC}"
-    local app_info=$(get_app_info)
-    print_container_status "$app_info" "status" "application"
+    # Container endpoints
+    echo -e "\n${CYAN}Service Endpoints:${NC}"
+    echo -e "${GREEN}• Frontend:${NC} http://localhost:3000"
+    echo -e "${GREEN}• API Gateway:${NC} http://localhost:8989"
+    echo -e "${GREEN}• Service Registry:${NC} http://localhost:8761"
+    echo -e "${GREEN}• Notification Service:${NC} http://localhost:8082"
+    echo -e "${GREEN}• Project Service:${NC} http://localhost:8083"
+    echo -e "${GREEN}• User Service:${NC} http://localhost:8081"
+    echo -e "${GREEN}• RabbitMQ Management:${NC} http://localhost:15672"
 }
 
 logs() {
     local service="$1"
     
+    cd "$ROOT_DIR"
+    
     if [[ -z "$service" ]]; then
         echo -e "${RED}Please specify a service to view logs${NC}"
-        echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, frontend${NC}"
-        exit 1
+        echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, frontend${NC}"
+        return 1
     fi
     
     case "$service" in
@@ -386,8 +458,28 @@ logs() {
         "apps"|"applications")
             docker compose -f "$DOCKER_APP" logs -f
             ;;
+        "service-registry")
+            docker compose -f "$DOCKER_APP" logs -f service-registry
+            ;;
+        "api-gateway")
+            docker compose -f "$DOCKER_APP" logs -f api-gateway
+            ;;
+        "notification")
+            docker compose -f "$DOCKER_APP" logs -f notification-service
+            ;;
+        "project")
+            docker compose -f "$DOCKER_APP" logs -f project-service
+            ;;
+        "user")
+            docker compose -f "$DOCKER_APP" logs -f user-service
+            ;;
+        "frontend")
+            docker compose -f "$DOCKER_APP" logs -f frontend
+            ;;
         *)
-            docker compose -f "$DOCKER_APP" logs -f "$service"
+            echo -e "${RED}Unknown service: $service${NC}"
+            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, frontend${NC}"
+            return 1
             ;;
     esac
 }
@@ -398,6 +490,8 @@ logs() {
 build_all() {
     print_header
     print_step "1" "Building all Docker images..."
+    
+    cd "$ROOT_DIR"
     
     # Build infrastructure (if needed)
     echo -e "${CYAN}Building infrastructure images...${NC}"
@@ -418,6 +512,8 @@ clean_all() {
     
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         print_step "1" "Cleaning up all Docker resources..."
+        
+        cd "$ROOT_DIR"
         
         # Stop and remove everything
         docker compose -f "$DOCKER_SERVICES" down --rmi all --volumes --remove-orphans
@@ -468,7 +564,7 @@ show_help() {
     echo -e "  • api-gateway       - Spring Cloud Gateway"
     echo -e "  • notification      - Notification Service"
     echo -e "  • project          - Project Service"
-    
+    echo -e "  • user             - User Service"
     echo -e "  • frontend         - Next.js Frontend"
     echo ""
     echo -e "${BLUE}Utility Commands:${NC}"
