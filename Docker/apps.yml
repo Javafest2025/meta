@@ -1,0 +1,178 @@
+services:
+  # 1. Service Registry (First - Eureka)
+  service-registry:
+    build:
+      context: ../Microservices/service-registry
+      dockerfile: Dockerfile
+    container_name: scholar-service-registry
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://localhost:8761/eureka/
+    networks:
+      - scholarai-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - user-postgres
+
+  # 2. API Gateway (Second - After Service Registry)
+  api-gateway:
+    build:
+      context: ../Microservices/api_gateway
+      dockerfile: Dockerfile
+    container_name: scholar-api-gateway
+    restart: unless-stopped
+    ports:
+      - "8989:8989"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+    networks:
+      - scholarai-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8989/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - service-registry
+      - user-postgres
+      - user-rabbitmq
+      - user-redis
+
+  # 3. Notification Service (Third)
+  notification-service:
+    build:
+      context: ../Microservices/notification_service
+      dockerfile: Dockerfile
+    container_name: scholar-notification-service
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+      - SPRING_RABBITMQ_HOST=user-rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=${USER_RABBITMQ_USER}
+      - SPRING_RABBITMQ_PASSWORD=${USER_RABBITMQ_PASSWORD}
+    networks:
+      - scholarai-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - service-registry
+      - notification-postgres
+      - user-rabbitmq
+
+  # 4. Project Service (Fourth)
+  project-service:
+    build:
+      context: ../Microservices/project_service
+      dockerfile: Dockerfile
+    container_name: scholar-project-service
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+      - RABBITMQ_HOST=user-rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${USER_RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${USER_RABBITMQ_PASSWORD}
+    networks:
+      - scholarai-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - service-registry
+      - project-postgres
+      - user-rabbitmq
+
+  # 5. User Service (Fifth)
+  user-service:
+    build:
+      context: ../Microservices/user_service
+      dockerfile: Dockerfile
+    container_name: scholar-user-service
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+      - REDIS_PASSWORD=${USER_REDIS_PASSWORD}
+      - RABBITMQ_USER=${USER_RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${USER_RABBITMQ_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - USER_NAME=${USER_NAME}
+      - USER_PASSWORD=${USER_PASSWORD}
+      - SPRING_GOOGLE_CLIENT_ID=${SPRING_GOOGLE_CLIENT_ID}
+      - SPRING_GOOGLE_CLIENT_SECRET=${SPRING_GOOGLE_CLIENT_SECRET}
+      - SPRING_GITHUB_CLIENT_ID=${SPRING_GITHUB_CLIENT_ID}
+      - SPRING_GITHUB_CLIENT_SECRET=${SPRING_GITHUB_CLIENT_SECRET}
+      - CLOUDINARY_URL=${CLOUDINARY_URL}
+    networks:
+      - scholarai-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - service-registry
+      - user-postgres
+      - user-redis
+      - user-rabbitmq
+
+  # 6. Frontend (Last - After all backend services)
+  frontend:
+    build:
+      context: ../Frontend
+      dockerfile: Dockerfile
+    container_name: scholar-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:8989
+      - NEXT_PUBLIC_DOCKER_BACKEND_URL=http://localhost:8989
+      - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+      - NEXT_PUBLIC_GITHUB_CLIENT_ID=${NEXT_PUBLIC_GITHUB_CLIENT_ID}
+      - NEXT_PUBLIC_ENV=docker
+    networks:
+      - scholarai-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - api-gateway
+      - user-service
+      - notification-service
+      - project-service
+
+networks:
+  scholarai-network:
+    external: true
