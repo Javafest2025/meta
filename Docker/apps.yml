@@ -62,8 +62,12 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
       - SPRING_RABBITMQ_HOST=user-rabbitmq
       - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=${USER_RABBITMQ_USER}
-      - SPRING_RABBITMQ_PASSWORD=${USER_RABBITMQ_PASSWORD}
+      - SPRING_RABBITMQ_USERNAME=scholar
+      - SPRING_RABBITMQ_PASSWORD=FindSolace@0
+      - NOTIFICATION_DB_USER=scholar
+      - NOTIFICATION_DB_PASSWORD=FindSolace@0
+      - GMAIL_ADDRESS=scholarai.official@gmail.com
+      - GMAIL_APP_PASSWORD=zlqm beea ftzj cvkn
     networks:
       - scholarai-network
     healthcheck:
@@ -89,8 +93,10 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
       - RABBITMQ_HOST=user-rabbitmq
       - RABBITMQ_PORT=5672
-      - RABBITMQ_USER=${USER_RABBITMQ_USER}
-      - RABBITMQ_PASSWORD=${USER_RABBITMQ_PASSWORD}
+      - RABBITMQ_USER=scholar
+      - RABBITMQ_PASSWORD=FindSolace@0
+      - PROJECT_DB_USER=scholar
+      - PROJECT_DB_PASSWORD=FindSolace@0
     networks:
       - scholarai-network
     healthcheck:
@@ -102,7 +108,45 @@ services:
     depends_on:
       - service-registry
 
-
+  # 5. User Service (Fifth)
+  user-service:
+    build:
+      context: ../../Microservices/user_service
+      dockerfile: Dockerfile
+    container_name: scholar-user-service
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+      - RABBITMQ_HOST=user-rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=scholar
+      - RABBITMQ_PASSWORD=FindSolace@0
+      - USER_DB_USER=scholar
+      - USER_DB_PASSWORD=FindSolace@0
+      - REDIS_PASSWORD=FindSolace@0
+      - JWT_SECRET=c2Nob2xhcmFpX2p3dF9zZWNyZXRfMjAyNV9zZWN1cmVfa2V5X2Zvcl9hdXRoZW50aWNhdGlvbg==
+      - USER_NAME=your_username_here
+      - USER_PASSWORD=your_password_here
+      - JWT_ACCESS_EXPIRATION_MS=600000
+      - JWT_REFRESH_EXPIRATION_MS=604800000
+      - SPRING_GOOGLE_CLIENT_ID=dummy_google_client_id
+      - SPRING_GOOGLE_CLIENT_SECRET=dummy_google_client_secret
+      - SPRING_GITHUB_CLIENT_ID=dummy_github_client_id
+      - SPRING_GITHUB_CLIENT_SECRET=dummy_github_client_secret
+      - CLOUDINARY_CLOUDINARY_URL=cloudinary://dummy_api_key:dummy_api_secret@dummy_cloud_name
+    networks:
+      - scholarai-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - service-registry
 
   # 6. Frontend (Last - After all backend services)
   frontend:
@@ -117,9 +161,10 @@ services:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=http://localhost:8989
       - NEXT_PUBLIC_DOCKER_BACKEND_URL=http://localhost:8989
-      - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
-      - NEXT_PUBLIC_GITHUB_CLIENT_ID=${NEXT_PUBLIC_GITHUB_CLIENT_ID}
+      - NEXT_PUBLIC_GOOGLE_CLIENT_ID=dummy_google_client_id
+      - NEXT_PUBLIC_GITHUB_CLIENT_ID=dummy_github_client_id
       - NEXT_PUBLIC_ENV=docker
+      - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=dummy_cloud_name
     networks:
       - scholarai-network
     healthcheck:
@@ -132,6 +177,7 @@ services:
       - api-gateway
       - notification-service
       - project-service
+      - user-service
 
 networks:
   scholarai-network:
