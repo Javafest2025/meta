@@ -20,6 +20,7 @@ NC='\033[0m'
 # Paths & constants
 ###############################################################################
 ROOT_DIR="$(dirname "$0")/.."
+PARENT_DIR="$(dirname "$ROOT_DIR)"
 DOCKER_APP="$ROOT_DIR/Docker/apps.yml"
 DOCKER_SERVICES="$ROOT_DIR/Docker/services.yml"
 DOCKER_ENV="$ROOT_DIR/Docker/.env"
@@ -27,7 +28,10 @@ COMPOSE_STACK="-f \"$DOCKER_SERVICES\" -f \"$DOCKER_APP\""
 
 # Load environment variables from Docker .env file
 if [[ -f "$DOCKER_ENV" ]]; then
-    export $(grep -v '^#' "$DOCKER_ENV" | xargs)
+    # Source the .env file to load variables
+    set -a
+    source "$DOCKER_ENV"
+    set +a
 fi
 
 ###############################################################################
@@ -125,6 +129,8 @@ print_container_status() {
 ###############################################################################
 start_infrastructure() {
     print_step "1" "Starting infrastructure services (Databases, RabbitMQ, Redis)..."
+    # Change to parent directory for Docker Compose
+    cd "$PARENT_DIR"
     docker compose -f "$DOCKER_SERVICES" up -d
     
     if [[ $? -eq 0 ]]; then
@@ -134,8 +140,8 @@ start_infrastructure() {
         print_container_status "$container_info" "started" "infrastructure"
         
         # Wait for infrastructure to be ready
-        echo -e "${YELLOW}Waiting 30 seconds for infrastructure to stabilize...${NC}"
-        sleep 30
+        echo -e "${YELLOW}Waiting 10 seconds for infrastructure to stabilize...${NC}"
+        sleep 10
     else
         echo -e "${RED}✗ Failed to start infrastructure services${NC}"
         exit 1
@@ -144,6 +150,8 @@ start_infrastructure() {
 
 stop_infrastructure() {
     print_step "1" "Stopping infrastructure services..."
+    # Change to parent directory for Docker Compose
+    cd "$PARENT_DIR"
     docker compose -f "$DOCKER_SERVICES" down
     
     if [[ $? -eq 0 ]]; then
@@ -159,6 +167,9 @@ stop_infrastructure() {
 ###############################################################################
 start_applications() {
     print_step "2" "Starting application services..."
+    
+    # Change to parent directory for Docker Compose
+    cd "$PARENT_DIR"
     
     # Start service registry first
     print_step "2.1" "Starting Service Registry..."
@@ -177,12 +188,12 @@ start_applications() {
     fi
     
     # Start microservices in parallel
-    print_step "2.3" "Starting microservices (Notification, Project, User)..."
-    docker compose -f "$DOCKER_APP" up -d notification-service project-service user-service
+    print_step "2.3" "Starting microservices (Notification, Project)..."
+    docker compose -f "$DOCKER_APP" up -d notification-service project-service
     
     # Wait for microservices to be ready
     echo -e "${YELLOW}Waiting for microservices to be ready...${NC}"
-    sleep 30
+    sleep 15
     
     # Start frontend last
     print_step "2.4" "Starting Frontend..."
@@ -201,6 +212,8 @@ start_applications() {
 
 stop_applications() {
     print_step "2" "Stopping application services..."
+    # Change to parent directory for Docker Compose
+    cd "$PARENT_DIR"
     docker compose -f "$DOCKER_APP" down
     
     if [[ $? -eq 0 ]]; then
@@ -225,26 +238,28 @@ start_service() {
             start_applications
             ;;
         "service-registry")
+            cd "$PARENT_DIR"
             docker compose -f "$DOCKER_APP" up -d service-registry
             ;;
         "api-gateway")
+            cd "$PARENT_DIR"
             docker compose -f "$DOCKER_APP" up -d api-gateway
             ;;
         "notification")
+            cd "$PARENT_DIR"
             docker compose -f "$DOCKER_APP" up -d notification-service
             ;;
         "project")
+            cd "$PARENT_DIR"
             docker compose -f "$DOCKER_APP" up -d project-service
             ;;
-        "user")
-            docker compose -f "$DOCKER_APP" up -d user-service
-            ;;
         "frontend")
+            cd "$PARENT_DIR"
             docker compose -f "$DOCKER_APP" up -d frontend
             ;;
         *)
             echo -e "${RED}Unknown service: $service${NC}"
-            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, frontend${NC}"
+            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, frontend${NC}"
             exit 1
             ;;
     esac
@@ -272,15 +287,13 @@ stop_service() {
         "project")
             docker compose -f "$DOCKER_APP" stop project-service
             ;;
-        "user")
-            docker compose -f "$DOCKER_APP" stop user-service
-            ;;
+
         "frontend")
             docker compose -f "$DOCKER_APP" stop frontend
             ;;
         *)
             echo -e "${RED}Unknown service: $service${NC}"
-            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, frontend${NC}"
+            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, frontend${NC}"
             exit 1
             ;;
     esac
@@ -336,6 +349,9 @@ status() {
     print_header
     echo -e "${CYAN}▶ Current platform status:${NC}"
     
+    # Change to parent directory for Docker Compose
+    cd "$PARENT_DIR"
+    
     # Infrastructure status
     echo -e "\n${BLUE}Infrastructure Services:${NC}"
     docker compose -f "$DOCKER_SERVICES" ps
@@ -359,7 +375,7 @@ logs() {
     
     if [[ -z "$service" ]]; then
         echo -e "${RED}Please specify a service to view logs${NC}"
-        echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, frontend${NC}"
+        echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, frontend${NC}"
         exit 1
     fi
     
@@ -452,7 +468,7 @@ show_help() {
     echo -e "  • api-gateway       - Spring Cloud Gateway"
     echo -e "  • notification      - Notification Service"
     echo -e "  • project          - Project Service"
-    echo -e "  • user             - User Service"
+    
     echo -e "  • frontend         - Next.js Frontend"
     echo ""
     echo -e "${BLUE}Utility Commands:${NC}"

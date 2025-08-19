@@ -2,7 +2,7 @@ services:
   # 1. Service Registry (First - Eureka)
   service-registry:
     build:
-      context: ../Microservices/service-registry
+      context: ../../Microservices/service_registry
       dockerfile: Dockerfile
     container_name: scholar-service-registry
     restart: unless-stopped
@@ -19,13 +19,12 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    depends_on:
-      - user-postgres
+    depends_on: []
 
   # 2. API Gateway (Second - After Service Registry)
   api-gateway:
     build:
-      context: ../Microservices/api_gateway
+      context: ../../Microservices/api_gateway
       dockerfile: Dockerfile
     container_name: scholar-api-gateway
     restart: unless-stopped
@@ -34,6 +33,10 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-registry:8761/eureka/
+      - eureka.client.service-url.defaultZone=http://service-registry:8761/eureka/
+      - SPRING_APPLICATION_NAME=api-gateway
+      - spring.application.name=api-gateway
     networks:
       - scholarai-network
     healthcheck:
@@ -44,14 +47,11 @@ services:
       start_period: 60s
     depends_on:
       - service-registry
-      - user-postgres
-      - user-rabbitmq
-      - user-redis
 
   # 3. Notification Service (Third)
   notification-service:
     build:
-      context: ../Microservices/notification_service
+      context: ../../Microservices/notification_service
       dockerfile: Dockerfile
     container_name: scholar-notification-service
     restart: unless-stopped
@@ -74,13 +74,11 @@ services:
       start_period: 60s
     depends_on:
       - service-registry
-      - notification-postgres
-      - user-rabbitmq
 
   # 4. Project Service (Fourth)
   project-service:
     build:
-      context: ../Microservices/project_service
+      context: ../../Microservices/project_service
       dockerfile: Dockerfile
     container_name: scholar-project-service
     restart: unless-stopped
@@ -103,50 +101,13 @@ services:
       start_period: 60s
     depends_on:
       - service-registry
-      - project-postgres
-      - user-rabbitmq
 
-  # 5. User Service (Fifth)
-  user-service:
-    build:
-      context: ../Microservices/user_service
-      dockerfile: Dockerfile
-    container_name: scholar-user-service
-    restart: unless-stopped
-    ports:
-      - "8081:8081"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
-      - REDIS_PASSWORD=${USER_REDIS_PASSWORD}
-      - RABBITMQ_USER=${USER_RABBITMQ_USER}
-      - RABBITMQ_PASSWORD=${USER_RABBITMQ_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
-      - USER_NAME=${USER_NAME}
-      - USER_PASSWORD=${USER_PASSWORD}
-      - SPRING_GOOGLE_CLIENT_ID=${SPRING_GOOGLE_CLIENT_ID}
-      - SPRING_GOOGLE_CLIENT_SECRET=${SPRING_GOOGLE_CLIENT_SECRET}
-      - SPRING_GITHUB_CLIENT_ID=${SPRING_GITHUB_CLIENT_ID}
-      - SPRING_GITHUB_CLIENT_SECRET=${SPRING_GITHUB_CLIENT_SECRET}
-      - CLOUDINARY_URL=${CLOUDINARY_URL}
-    networks:
-      - scholarai-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    depends_on:
-      - service-registry
-      - user-postgres
-      - user-redis
-      - user-rabbitmq
+
 
   # 6. Frontend (Last - After all backend services)
   frontend:
     build:
-      context: ../Frontend
+      context: ../../frontend
       dockerfile: Dockerfile
     container_name: scholar-frontend
     restart: unless-stopped
@@ -169,10 +130,10 @@ services:
       start_period: 60s
     depends_on:
       - api-gateway
-      - user-service
       - notification-service
       - project-service
 
 networks:
   scholarai-network:
     external: true
+    name: docker_scholarai-network
