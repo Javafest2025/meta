@@ -121,7 +121,7 @@ git push
 This repo is maintained by the ScholarAI team under the `Javafest2025` GitHub organization.
 
 - [Tasriad Ahmed Tias](https://github.com/Tasriad)
-- [Al Amin Forhad](https://github.com/your-partner)
+- [Farhad Al-Amin Dipto](https://github.com/Legend-2727)
 
 ---
 

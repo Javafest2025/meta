@@ -306,6 +306,68 @@ start_service() {
     esac
 }
 
+restart_service() {
+    local service="$1"
+    
+    cd "$ROOT_DIR"
+    
+    case "$service" in
+        "infra"|"infrastructure")
+            print_step "1" "Restarting infrastructure services..."
+            stop_infrastructure
+            sleep 3
+            start_infrastructure
+            ;;
+        "apps"|"applications")
+            print_step "1" "Restarting application services..."
+            stop_applications
+            sleep 3
+            start_applications
+            ;;
+        "service-registry")
+            echo -e "${CYAN}Restarting Service Registry (with rebuild)...${NC}"
+            docker compose -f "$DOCKER_APP" stop service-registry
+            docker compose -f "$DOCKER_APP" build service-registry
+            docker compose -f "$DOCKER_APP" up -d service-registry
+            ;;
+        "api-gateway")
+            echo -e "${CYAN}Restarting API Gateway (with rebuild)...${NC}"
+            docker compose -f "$DOCKER_APP" stop api-gateway
+            docker compose -f "$DOCKER_APP" build api-gateway
+            docker compose -f "$DOCKER_APP" up -d api-gateway
+            ;;
+        "notification")
+            echo -e "${CYAN}Restarting Notification Service (with rebuild)...${NC}"
+            docker compose -f "$DOCKER_APP" stop notification-service
+            docker compose -f "$DOCKER_APP" build notification-service
+            docker compose -f "$DOCKER_APP" up -d notification-service
+            ;;
+        "project")
+            echo -e "${CYAN}Restarting Project Service (with rebuild)...${NC}"
+            docker compose -f "$DOCKER_APP" stop project-service
+            docker compose -f "$DOCKER_APP" build project-service
+            docker compose -f "$DOCKER_APP" up -d project-service
+            ;;
+        "user")
+            echo -e "${CYAN}Restarting User Service (with rebuild)...${NC}"
+            docker compose -f "$DOCKER_APP" stop user-service
+            docker compose -f "$DOCKER_APP" build user-service
+            docker compose -f "$DOCKER_APP" up -d user-service
+            ;;
+        "frontend")
+            echo -e "${CYAN}Restarting Frontend (with rebuild)...${NC}"
+            docker compose -f "$DOCKER_APP" stop frontend
+            docker compose -f "$DOCKER_APP" build frontend
+            docker compose -f "$DOCKER_APP" up -d frontend
+            ;;
+        *)
+            echo -e "${RED}Unknown service: $service${NC}"
+            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, frontend${NC}"
+            return 1
+            ;;
+    esac
+}
+
 stop_service() {
     local service="$1"
     
@@ -557,6 +619,7 @@ show_help() {
     echo -e "${BLUE}Individual Service Commands:${NC}"
     echo -e "  ${GREEN}start [SERVICE]${NC} - Start specific service"
     echo -e "  ${GREEN}stop [SERVICE]${NC}  - Stop specific service"
+    echo -e "  ${GREEN}restart [SERVICE]${NC} - Restart specific service (with rebuild)"
     echo -e "  ${GREEN}logs [SERVICE]${NC}  - View logs for specific service"
     echo ""
     echo -e "${BLUE}Available Services:${NC}"
@@ -577,6 +640,8 @@ show_help() {
     echo -e "  $0 start infra                  # Start only infrastructure"
     echo -e "  $0 start apps                   # Start only applications"
     echo -e "  $0 start service-registry       # Start specific service"
+    echo -e "  $0 restart frontend             # Restart frontend with rebuild"
+    echo -e "  $0 restart project              # Restart project service with rebuild"
     echo -e "  $0 logs api-gateway             # View API Gateway logs"
     echo -e "  $0 status                       # Show platform status"
 }
@@ -590,6 +655,7 @@ case "$1" in
     "restart-all")         restart_all ;;
     "start")               start_service "$2" ;;
     "stop")                stop_service "$2" ;;
+    "restart")             restart_service "$2" ;;
     "status")              status ;;
     "logs")                logs "$2" ;;
     "build-all")           build_all ;;
