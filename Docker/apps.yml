@@ -82,7 +82,7 @@ services:
   # 4. Project Service (Fourth)
   project-service:
     build:
-      context: ../../Microservices/project_service
+      context: ../Microservices/project-service
       dockerfile: Dockerfile
     container_name: scholar-project-service
     restart: unless-stopped

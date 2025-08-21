@@ -7,6 +7,18 @@
 
 ###############################################################################
 # Pretty colours
+##############################################################################    # Container endpoints
+    echo -e "\n${CYAN}Service Endpoints:${NC}"
+    echo -e "${GREEN}• Frontend:${NC} http://localhost:3000"
+    echo -e "${GREEN}• API Gateway:${NC} http://localhost:8989"
+    echo -e "${GREEN}• Service Registry:${NC} http://localhost:8761"
+    echo -e "${GREEN}• Notification Service:${NC} http://localhost:8082"
+    echo -e "${GREEN}• Project Service:${NC} http://localhost:8083"
+    echo -e "${GREEN}• User Service:${NC} http://localhost:8081"
+    echo -e "${GREEN}• RabbitMQ Management:${NC} http://localhost:15672"
+
+###############################################################################
+# Pretty colours
 ###############################################################################
 RED='\033[0;31m'
 GREEN='\033[0;32m'
