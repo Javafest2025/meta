@@ -2,7 +2,7 @@ services:
   # 1. Service Registry (First - Eureka)
   service-registry:
     build:
-      context: ../../Microservices/service_registry
+      context: ../Microservices/service-registry
       dockerfile: Dockerfile
     container_name: scholar-service-registry
     restart: unless-stopped
@@ -24,7 +24,7 @@ services:
   # 2. API Gateway (Second - After Service Registry)
   api-gateway:
     build:
-      context: ../../Microservices/api_gateway
+      context: ../Microservices/api-gateway
       dockerfile: Dockerfile
     container_name: scholar-api-gateway
     restart: unless-stopped
@@ -51,7 +51,7 @@ services:
   # 3. Notification Service (Third)
   notification-service:
     build:
-      context: ../../Microservices/notification_service
+      context: ../Microservices/notification-service
       dockerfile: Dockerfile
     container_name: scholar-notification-service
     restart: unless-stopped
@@ -111,7 +111,7 @@ services:
   # 5. User Service (Fifth)
   user-service:
     build:
-      context: ../../Microservices/user_service
+      context: ../Microservices/user-service
       dockerfile: Dockerfile
     container_name: scholar-user-service
     restart: unless-stopped
@@ -151,7 +151,7 @@ services:
   # 6. Frontend (Last - After all backend services)
   frontend:
     build:
-      context: ../frontend
+      context: ./Frontend
       dockerfile: Dockerfile
     container_name: scholar-frontend
     restart: unless-stopped
