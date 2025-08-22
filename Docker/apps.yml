@@ -151,7 +151,7 @@ services:
   # 6. Frontend (Last - After all backend services)
   frontend:
     build:
-      context: ../Frontend
+      context: ../frontend
       dockerfile: Dockerfile
     container_name: scholar-frontend
     restart: unless-stopped
