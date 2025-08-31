@@ -159,7 +159,43 @@ services:
     depends_on:
       - service-registry
 
-  # 6. Frontend (Last - After all backend services)
+  # 6. Paper Search Service (Sixth)
+  paper-search:
+    build:
+      context: ../AI-Agents/paper-search
+      dockerfile: Dockerfile
+    container_name: scholar-paper-search
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      - API_HOST=0.0.0.0
+      - API_PORT=8001
+      - DEBUG=${DEBUG:-False}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - RABBITMQ_HOST=user-rabbitmq
+      - RABBITMQ_PORT=${USER_RABBITMQ_AMQP_PORT}
+      - RABBITMQ_USER=${USER_RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${USER_RABBITMQ_PASSWORD}
+      - CORE_API_KEY=${CORE_API_KEY}
+      - UNPAYWALL_EMAIL=${UNPAYWALL_EMAIL}
+      - B2_KEY_ID=${B2_KEY_ID}
+      - B2_APPLICATION_KEY=${B2_APPLICATION_KEY}
+      - B2_BUCKET_NAME=${B2_BUCKET_NAME}
+      - B2_BUCKET_ID=${B2_BUCKET_ID}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    networks:
+      - scholarai-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - service-registry
+
+  # 7. Frontend (Last - After all backend services)
   frontend:
     build:
       context: ../Frontend
@@ -193,6 +229,7 @@ services:
       - notification-service
       - project-service
       - user-service
+      - paper-search
 
 networks:
   scholarai-network:

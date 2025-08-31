@@ -7,18 +7,6 @@
 
 ###############################################################################
 # Pretty colours
-##############################################################################    # Container endpoints
-    echo -e "\n${CYAN}Service Endpoints:${NC}"
-    echo -e "${GREEN}• Frontend:${NC} http://localhost:3000"
-    echo -e "${GREEN}• API Gateway:${NC} http://localhost:8989"
-    echo -e "${GREEN}• Service Registry:${NC} http://localhost:8761"
-    echo -e "${GREEN}• Notification Service:${NC} http://localhost:8082"
-    echo -e "${GREEN}• Project Service:${NC} http://localhost:8083"
-    echo -e "${GREEN}• User Service:${NC} http://localhost:8081"
-    echo -e "${GREEN}• RabbitMQ Management:${NC} http://localhost:15672"
-
-###############################################################################
-# Pretty colours
 ###############################################################################
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -137,11 +125,12 @@ start_infrastructure() {
     if docker compose -f "$DOCKER_SERVICES" up -d; then
         echo -e "${GREEN}✓ Infrastructure services started successfully!${NC}"
         echo -e "${CYAN}Infrastructure services:${NC}"
-        echo -e "${GREEN}• user-db:${NC} localhost:5433"
-        echo -e "${GREEN}• notification-db:${NC} localhost:5434"
-        echo -e "${GREEN}• project-db:${NC} localhost:5435"
-        echo -e "${GREEN}• user-rabbitmq:${NC} localhost:5672"
-        echo -e "${GREEN}• user-redis:${NC} localhost:6379"
+        echo -e "${GREEN}• user-db:${NC} localhost:${USER_DB_PORT:-5433}"
+        echo -e "${GREEN}• notification-db:${NC} localhost:${NOTIFICATION_DB_PORT:-5434}"
+        echo -e "${GREEN}• project-db:${NC} localhost:${PROJECT_DB_PORT:-5435}"
+        echo -e "${GREEN}• user-rabbitmq:${NC} localhost:${USER_RABBITMQ_AMQP_PORT:-5672}"
+        echo -e "${GREEN}• user-redis:${NC} localhost:${USER_REDIS_PORT:-6379}"
+        echo -e "${GREEN}• grobid-pdf-extractor:${NC} localhost:8070"
         
         # Wait for infrastructure to be ready
         echo -e "${YELLOW}Waiting 15 seconds for infrastructure to stabilize...${NC}"
@@ -232,7 +221,6 @@ start_applications() {
     if docker compose -f "$DOCKER_APP" up -d user-service; then
         echo -e "${GREEN}✓ User Service started${NC}"
         if ! wait_for_service "User Service" "8081"; then
-            echo -e "${RED}✗ User Service failed to become ready${NC}"
             return 1
         fi
     else
@@ -240,12 +228,23 @@ start_applications() {
         return 1
     fi
     
-    # 6. Frontend
-    print_step "2.6" "Starting Frontend..."
+    # 6. Paper Search Service
+    print_step "2.6" "Starting Paper Search Service..."
+    if docker compose -f "$DOCKER_APP" up -d paper-search; then
+        echo -e "${GREEN}✓ Paper Search Service started${NC}"
+        if ! wait_for_service "Paper Search Service" "8001"; then
+            return 1
+        fi
+    else
+        echo -e "${RED}✗ Failed to start Paper Search Service${NC}"
+        return 1
+    fi
+    
+    # 7. Frontend
+    print_step "2.7" "Starting Frontend..."
     if docker compose -f "$DOCKER_APP" up -d frontend; then
         echo -e "${GREEN}✓ Frontend started${NC}"
         if ! wait_for_frontend; then
-            echo -e "${RED}✗ Frontend failed to become ready${NC}"
             return 1
         fi
     else
@@ -306,13 +305,21 @@ start_service() {
             echo -e "${CYAN}Starting User Service...${NC}"
             docker compose -f "$DOCKER_APP" up -d user-service
             ;;
+        "paper-search")
+            echo -e "${CYAN}Starting Paper Search Service...${NC}"
+            docker compose -f "$DOCKER_APP" up -d paper-search
+            ;;
         "frontend")
             echo -e "${CYAN}Starting Frontend...${NC}"
             docker compose -f "$DOCKER_APP" up -d frontend
             ;;
+        "grobid")
+            echo -e "${CYAN}Starting GROBID PDF Extractor...${NC}"
+            docker compose -f "$DOCKER_SERVICES" up -d grobid
+            ;;
         *)
             echo -e "${RED}Unknown service: $service${NC}"
-            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, frontend${NC}"
+            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, frontend, grobid${NC}"
             return 1
             ;;
     esac
@@ -366,15 +373,27 @@ restart_service() {
             docker compose -f "$DOCKER_APP" build user-service
             docker compose -f "$DOCKER_APP" up -d user-service
             ;;
+        "paper-search")
+            echo -e "${CYAN}Restarting Paper Search Service (with rebuild)...${NC}"
+            docker compose -f "$DOCKER_APP" stop paper-search
+            docker compose -f "$DOCKER_APP" build paper-search
+            docker compose -f "$DOCKER_APP" up -d paper-search
+            ;;
         "frontend")
             echo -e "${CYAN}Restarting Frontend (with rebuild)...${NC}"
             docker compose -f "$DOCKER_APP" stop frontend
             docker compose -f "$DOCKER_APP" build frontend
             docker compose -f "$DOCKER_APP" up -d frontend
             ;;
+        "grobid")
+            echo -e "${CYAN}Restarting GROBID PDF Extractor (with rebuild)...${NC}"
+            docker compose -f "$DOCKER_SERVICES" stop grobid
+            docker compose -f "$DOCKER_SERVICES" build grobid
+            docker compose -f "$DOCKER_SERVICES" up -d grobid
+            ;;
         *)
             echo -e "${RED}Unknown service: $service${NC}"
-            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, frontend${NC}"
+            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, frontend, grobid${NC}"
             return 1
             ;;
     esac
@@ -412,13 +431,21 @@ stop_service() {
             echo -e "${CYAN}Stopping User Service...${NC}"
             docker compose -f "$DOCKER_APP" stop user-service
             ;;
+        "paper-search")
+            echo -e "${CYAN}Stopping Paper Search Service...${NC}"
+            docker compose -f "$DOCKER_APP" stop paper-search
+            ;;
         "frontend")
             echo -e "${CYAN}Stopping Frontend...${NC}"
             docker compose -f "$DOCKER_APP" stop frontend
             ;;
+        "grobid")
+            echo -e "${CYAN}Stopping GROBID PDF Extractor...${NC}"
+            docker compose -f "$DOCKER_SERVICES" stop grobid
+            ;;
         *)
             echo -e "${RED}Unknown service: $service${NC}"
-            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, frontend${NC}"
+            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, frontend, grobid${NC}"
             return 1
             ;;
     esac
@@ -448,7 +475,9 @@ start_all() {
     echo -e "${GREEN}• Frontend:${NC} http://localhost:3000"
     echo -e "${GREEN}• API Gateway:${NC} http://localhost:8989"
     echo -e "${GREEN}• Service Registry:${NC} http://localhost:8761"
+    echo -e "${GREEN}• Paper Search Service:${NC} http://localhost:8001"
     echo -e "${GREEN}• RabbitMQ Management:${NC} http://localhost:15672"
+    echo -e "${GREEN}• GROBID PDF Extractor:${NC} http://localhost:8070"
 }
 
 stop_all() {
@@ -477,6 +506,20 @@ restart_all() {
     start_all
 }
 
+rebuild_all() {
+    print_header
+    print_step "1" "Rebuilding and restarting complete ScholarAI platform..."
+    
+    # Stop everything first
+    stop_all
+    
+    # Build all images fresh
+    build_all
+    
+    # Start everything
+    start_all
+}
+
 ###############################################################################
 # Status and Monitoring
 ###############################################################################
@@ -501,6 +544,7 @@ status() {
     print_service_status "Notification Service" "8082"
     print_service_status "Project Service" "8083"
     print_service_status "User Service" "8081"
+    print_service_status "Paper Search Service" "8001"
     print_frontend_status
     
     # Container endpoints
@@ -511,7 +555,9 @@ status() {
     echo -e "${GREEN}• Notification Service:${NC} http://localhost:8082"
     echo -e "${GREEN}• Project Service:${NC} http://localhost:8083"
     echo -e "${GREEN}• User Service:${NC} http://localhost:8081"
+    echo -e "${GREEN}• Paper Search Service:${NC} http://localhost:8001"
     echo -e "${GREEN}• RabbitMQ Management:${NC} http://localhost:15672"
+    echo -e "${GREEN}• GROBID PDF Extractor:${NC} http://localhost:8070"
 }
 
 logs() {
@@ -521,7 +567,7 @@ logs() {
     
     if [[ -z "$service" ]]; then
         echo -e "${RED}Please specify a service to view logs${NC}"
-        echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, frontend${NC}"
+        echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, frontend, grobid${NC}"
         return 1
     fi
     
@@ -547,12 +593,18 @@ logs() {
         "user")
             docker compose -f "$DOCKER_APP" logs -f user-service
             ;;
+        "paper-search")
+            docker compose -f "$DOCKER_APP" logs -f paper-search
+            ;;
         "frontend")
             docker compose -f "$DOCKER_APP" logs -f frontend
             ;;
+        "grobid")
+            docker compose -f "$DOCKER_SERVICES" logs -f grobid
+            ;;
         *)
             echo -e "${RED}Unknown service: $service${NC}"
-            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, frontend${NC}"
+            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, frontend, grobid${NC}"
             return 1
             ;;
     esac
@@ -618,6 +670,7 @@ show_help() {
     echo -e "  ${GREEN}start-all${NC}     - Start complete platform (infrastructure + applications)"
     echo -e "  ${GREEN}stop-all${NC}      - Stop complete platform"
     echo -e "  ${GREEN}restart-all${NC}   - Restart complete platform"
+    echo -e "  ${GREEN}rebuild-all${NC}   - Rebuild all images and restart complete platform"
     echo -e "  ${GREEN}status${NC}        - Show platform status"
     echo ""
     echo -e "${BLUE}Infrastructure Commands:${NC}"
@@ -640,7 +693,9 @@ show_help() {
     echo -e "  • notification      - Notification Service"
     echo -e "  • project          - Project Service"
     echo -e "  • user             - User Service"
+    echo -e "  • paper-search     - Paper Search Service (FastAPI)"
     echo -e "  • frontend         - Next.js Frontend"
+    echo -e "  • grobid           - GROBID PDF Extractor Service"
     echo ""
     echo -e "${BLUE}Utility Commands:${NC}"
     echo -e "  ${GREEN}build-all${NC}     - Build all Docker images"
@@ -649,12 +704,15 @@ show_help() {
     echo ""
     echo -e "${CYAN}Examples:${NC}"
     echo -e "  $0 start-all                    # Start everything"
+    echo -e "  $0 rebuild-all                  # Rebuild all images and restart"
     echo -e "  $0 start infra                  # Start only infrastructure"
     echo -e "  $0 start apps                   # Start only applications"
     echo -e "  $0 start service-registry       # Start specific service"
     echo -e "  $0 restart frontend             # Restart frontend with rebuild"
     echo -e "  $0 restart project              # Restart project service with rebuild"
     echo -e "  $0 logs api-gateway             # View API Gateway logs"
+    echo -e "  $0 logs paper-search            # View Paper Search logs"
+    echo -e "  $0 logs grobid                  # View GROBID logs"
     echo -e "  $0 status                       # Show platform status"
 }
 
@@ -665,6 +723,7 @@ case "$1" in
     "start-all")           start_all ;;
     "stop-all")            stop_all ;;
     "restart-all")         restart_all ;;
+    "rebuild-all")         rebuild_all ;;
     "start")               start_service "$2" ;;
     "stop")                stop_service "$2" ;;
     "restart")             restart_service "$2" ;;

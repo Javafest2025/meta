@@ -96,11 +96,26 @@ services:
     networks:
       - scholarai-network
 
+  # GROBID service for scientific document parsing
+  grobid:
+    image: lfoppiano/grobid:0.7.3
+    container_name: pdf_extractor_grobid
+    ports:
+      - "8070:8070"
+    volumes:
+      - grobid-home:/opt/grobid/grobid-home
+    environment:
+      - JAVA_OPTS=-Xmx4g
+    restart: unless-stopped
+    networks:
+      - scholarai-network
+
 volumes:
   user-redis-data:
   user-postgres-data:
   notification-postgres-data:
-  project-postgres-data:      
+  project-postgres-data:
+  grobid-home:      
 
 
 networks:
