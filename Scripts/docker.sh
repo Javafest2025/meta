@@ -240,8 +240,20 @@ start_applications() {
         return 1
     fi
     
-    # 7. Frontend
-    print_step "2.7" "Starting Frontend..."
+    # 7. PDF Extractor Service
+    print_step "2.7" "Starting PDF Extractor Service..."
+    if docker compose -f "$DOCKER_APP" up -d extractor; then
+        echo -e "${GREEN}✓ PDF Extractor Service started${NC}"
+        if ! wait_for_service "PDF Extractor Service" "8002"; then
+            return 1
+        fi
+    else
+        echo -e "${RED}✗ Failed to start PDF Extractor Service${NC}"
+        return 1
+    fi
+    
+    # 8. Frontend
+    print_step "2.8" "Starting Frontend..."
     if docker compose -f "$DOCKER_APP" up -d frontend; then
         echo -e "${GREEN}✓ Frontend started${NC}"
         if ! wait_for_frontend; then
@@ -308,6 +320,10 @@ start_service() {
         "paper-search")
             echo -e "${CYAN}Starting Paper Search Service...${NC}"
             docker compose -f "$DOCKER_APP" up -d paper-search
+            ;;
+        "extractor")
+            echo -e "${CYAN}Starting PDF Extractor Service...${NC}"
+            docker compose -f "$DOCKER_APP" up -d extractor
             ;;
         "frontend")
             echo -e "${CYAN}Starting Frontend...${NC}"
@@ -379,6 +395,12 @@ restart_service() {
             docker compose -f "$DOCKER_APP" build paper-search
             docker compose -f "$DOCKER_APP" up -d paper-search
             ;;
+        "extractor")
+            echo -e "${CYAN}Restarting PDF Extractor Service (with rebuild)...${NC}"
+            docker compose -f "$DOCKER_APP" stop extractor
+            docker compose -f "$DOCKER_APP" build extractor
+            docker compose -f "$DOCKER_APP" up -d extractor
+            ;;
         "frontend")
             echo -e "${CYAN}Restarting Frontend (with rebuild)...${NC}"
             docker compose -f "$DOCKER_APP" stop frontend
@@ -393,7 +415,7 @@ restart_service() {
             ;;
         *)
             echo -e "${RED}Unknown service: $service${NC}"
-            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, frontend, grobid${NC}"
+            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, extractor, frontend, grobid${NC}"
             return 1
             ;;
     esac
@@ -435,6 +457,10 @@ stop_service() {
             echo -e "${CYAN}Stopping Paper Search Service...${NC}"
             docker compose -f "$DOCKER_APP" stop paper-search
             ;;
+        "extractor")
+            echo -e "${CYAN}Stopping PDF Extractor Service...${NC}"
+            docker compose -f "$DOCKER_APP" stop extractor
+            ;;
         "frontend")
             echo -e "${CYAN}Stopping Frontend...${NC}"
             docker compose -f "$DOCKER_APP" stop frontend
@@ -445,7 +471,7 @@ stop_service() {
             ;;
         *)
             echo -e "${RED}Unknown service: $service${NC}"
-            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, frontend, grobid${NC}"
+            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, extractor, frontend, grobid${NC}"
             return 1
             ;;
     esac
@@ -476,6 +502,7 @@ start_all() {
     echo -e "${GREEN}• API Gateway:${NC} http://localhost:8989"
     echo -e "${GREEN}• Service Registry:${NC} http://localhost:8761"
     echo -e "${GREEN}• Paper Search Service:${NC} http://localhost:8001"
+    echo -e "${GREEN}• PDF Extractor Service:${NC} http://localhost:8002"
     echo -e "${GREEN}• RabbitMQ Management:${NC} http://localhost:15672"
     echo -e "${GREEN}• GROBID PDF Extractor:${NC} http://localhost:8070"
 }
@@ -545,6 +572,7 @@ status() {
     print_service_status "Project Service" "8083"
     print_service_status "User Service" "8081"
     print_service_status "Paper Search Service" "8001"
+    print_service_status "PDF Extractor Service" "8002"
     print_frontend_status
     
     # Container endpoints
@@ -567,7 +595,7 @@ logs() {
     
     if [[ -z "$service" ]]; then
         echo -e "${RED}Please specify a service to view logs${NC}"
-        echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, frontend, grobid${NC}"
+        echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, extractor, frontend, grobid${NC}"
         return 1
     fi
     
@@ -596,6 +624,9 @@ logs() {
         "paper-search")
             docker compose -f "$DOCKER_APP" logs -f paper-search
             ;;
+        "extractor")
+            docker compose -f "$DOCKER_APP" logs -f extractor
+            ;;
         "frontend")
             docker compose -f "$DOCKER_APP" logs -f frontend
             ;;
@@ -604,7 +635,7 @@ logs() {
             ;;
         *)
             echo -e "${RED}Unknown service: $service${NC}"
-            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, frontend, grobid${NC}"
+            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, extractor, frontend, grobid${NC}"
             return 1
             ;;
     esac
@@ -694,6 +725,7 @@ show_help() {
     echo -e "  • project          - Project Service"
     echo -e "  • user             - User Service"
     echo -e "  • paper-search     - Paper Search Service (FastAPI)"
+    echo -e "  • extractor        - PDF Extractor Service (FastAPI)"
     echo -e "  • frontend         - Next.js Frontend"
     echo -e "  • grobid           - GROBID PDF Extractor Service"
     echo ""
@@ -712,6 +744,7 @@ show_help() {
     echo -e "  $0 restart project              # Restart project service with rebuild"
     echo -e "  $0 logs api-gateway             # View API Gateway logs"
     echo -e "  $0 logs paper-search            # View Paper Search logs"
+    echo -e "  $0 logs extractor               # View PDF Extractor logs"
     echo -e "  $0 logs grobid                  # View GROBID logs"
     echo -e "  $0 status                       # Show platform status"
 }

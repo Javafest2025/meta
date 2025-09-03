@@ -195,7 +195,70 @@ services:
     depends_on:
       - service-registry
 
-  # 7. Frontend (Last - After all backend services)
+  # 7. PDF Extractor Service (Seventh)
+  extractor:
+    build:
+      context: ../AI-Agents/extractor
+      dockerfile: Dockerfile
+    container_name: scholar-extractor
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      - API_HOST=0.0.0.0
+      - API_PORT=8002
+      - DEBUG=${DEBUG:-False}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - RABBITMQ_HOST=user-rabbitmq
+      - RABBITMQ_PORT=${USER_RABBITMQ_AMQP_PORT}
+      - RABBITMQ_USER=${USER_RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${USER_RABBITMQ_PASSWORD}
+      - GROBID_URL=http://pdf_extractor_grobid:8070
+      - REDIS_URL=redis://user-redis:6379/0
+      - B2_KEY_ID=${B2_KEY_ID}
+      - B2_APPLICATION_KEY=${B2_APPLICATION_KEY}
+      - B2_BUCKET_NAME=${B2_BUCKET_NAME}
+      - B2_BUCKET_ID=${B2_BUCKET_ID}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - CLOUDINARY_URL=${CLOUDINARY_URL}
+      - HF_HOME=/app/cache/huggingface
+      - TORCH_HOME=/app/cache/torch
+      - OMP_NUM_THREADS=1
+      - MKL_NUM_THREADS=1
+      - NUMEXPR_NUM_THREADS=1
+      - OPENBLAS_NUM_THREADS=1
+      - VECLIB_MAXIMUM_THREADS=1
+      - BLAS_NUM_THREADS=1
+      - LAPACK_NUM_THREADS=1
+      - MALLOC_ARENA_MAX=2
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ../AI-Agents/extractor/paper:/app/paper
+      - ../AI-Agents/extractor/logs:/app/logs
+      - ../AI-Agents/extractor/cache:/app/cache
+      - ../AI-Agents/extractor/uploads:/app/uploads
+    networks:
+      - scholarai-network
+    cpus: 0.75
+    mem_limit: 768m
+    mem_reservation: 512m
+    memswap_limit: 1g
+    pids_limit: 128
+    shm_size: "128m"
+    ulimits:
+      nofile:
+        soft: 16384
+        hard: 16384
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - service-registry
+
+  # 8. Frontend (Last - After all backend services)
   frontend:
     build:
       context: ../Frontend
@@ -230,6 +293,7 @@ services:
       - project-service
       - user-service
       - paper-search
+      - extractor
 
 networks:
   scholarai-network:
