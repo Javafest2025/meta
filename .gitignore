@@ -37,14 +37,3 @@ target/
 # Temporary files
 *.tmp
 *.temp
-
-# Documentation files (implementation details)
-PDF_CONTEXTUAL_QA_IMPLEMENTATION_PLAN.md
-PDF_lcontext_qa_guide.txt
-LATEX_PREVIEW_PLAN.md
-PDF_EXTRACTION_CHAT_IMPLEMENTATION.md
-PDF_LATEX_CHAT_*.md
-
-# Meta documentation
-meta/
-*.md.bak
