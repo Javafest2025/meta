@@ -13,3 +13,12 @@
 [submodule "Microservices/service-registry"]
 	path = Microservices/service-registry
 	url = https://github.com/Javafest2025/service_registry.git
+[submodule "Microservices/project-service"]
+	path = Microservices/project-service
+	url = https://github.com/Javafest2025/project_service.git
+[submodule "AI-Agents/extractor"]
+	path = AI-Agents/extractor
+	url = https://github.com/Javafest2025/extractor
+[submodule "AI-Agents/paper-search"]
+	path = AI-Agents/paper-search
+	url = https://github.com/Javafest2025/paper-search
