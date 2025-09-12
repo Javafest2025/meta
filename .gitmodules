@@ -22,3 +22,6 @@
 [submodule "AI-Agents/paper-search"]
 	path = AI-Agents/paper-search
 	url = https://github.com/Javafest2025/paper-search
+[submodule "AI-Agents/gap-analyzer"]
+	path = AI-Agents/gap-analyzer
+	url = https://github.com/Javafest2025/gap_analyzer.git
