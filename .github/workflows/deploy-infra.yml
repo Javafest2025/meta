@@ -41,6 +41,9 @@ jobs:
             set -e
             cd /opt/scholarai/Docker
 
+            echo "🧹 Cleaning up old containers..."
+            docker compose -f services-prod.yml down || true
+
             echo "🚀 Starting infra deployment..."
             docker compose -f services-prod.yml --env-file /opt/scholarai/envs/infra.env pull
             docker compose -f services-prod.yml --env-file /opt/scholarai/envs/infra.env up -d --remove-orphans
@@ -58,4 +61,7 @@ jobs:
 
             echo "📊 Service status:"
             docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+
+            echo "🧹 Cleaning up dangling images..."
+            docker image prune -af || true
           EOF
