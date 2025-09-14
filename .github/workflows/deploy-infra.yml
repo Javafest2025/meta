@@ -1,0 +1,36 @@
+# .github/workflows/deploy-infra.yml
+name: Deploy Infra
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Docker/services-prod.yml'   # adjust path if different
+      - '.github/workflows/deploy-infra.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Copy compose file to VM
+        run: |
+          scp -o StrictHostKeyChecking=no Docker/services-prod.yml \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/opt/scholarai/services-prod.yml
+
+      - name: Deploy infra on VM
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+            cd /opt/scholarai
+            docker compose -f services-prod.yml pull
+            docker compose -f services-prod.yml up -d --remove-orphans
+          EOF
