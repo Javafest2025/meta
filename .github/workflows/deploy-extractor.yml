@@ -53,6 +53,10 @@ jobs:
               exit 1
             fi
 
+            echo "🔑 Fixing directory ownership for container user (uid=100, gid=101)..."
+            sudo mkdir -p ./paper ./logs ./cache ./uploads
+            sudo chown -R 100:101 ./paper ./logs ./cache ./uploads
+
             echo "📦 Starting Extractor AI Agent..."
             docker compose -f docker-compose.prod.yml up -d extractor
 
