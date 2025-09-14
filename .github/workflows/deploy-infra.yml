@@ -29,8 +29,9 @@ jobs:
 
       - name: Copy compose + Dockerfile to VM
         run: |
+          # Copy compose & grobid Dockerfile to VM inside Docker/
           scp -o StrictHostKeyChecking=no Docker/services-prod.yml \
-            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/opt/scholarai/services-prod.yml
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/opt/scholarai/Docker/services-prod.yml
           scp -o StrictHostKeyChecking=no Docker/Dockerfile.grobid \
             ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/opt/scholarai/Docker/Dockerfile.grobid
 
@@ -38,7 +39,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
             set -e
-            cd /opt/scholarai
+            cd /opt/scholarai/Docker
 
             echo "🚀 Starting infra deployment..."
             docker compose -f services-prod.yml --env-file /opt/scholarai/envs/infra.env pull

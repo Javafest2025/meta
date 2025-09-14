@@ -186,7 +186,7 @@ services:
 
   grobid:
     build:
-      context: ./Docker
+      context: .
       dockerfile: Dockerfile.grobid
     container_name: pdf_extractor_grobid
     restart: unless-stopped
