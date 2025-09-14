@@ -1,0 +1,82 @@
+name: Deploy Paper Search AI Agent
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'AI-Agents/paper-search'
+      - 'AI-Agents/paper-search/**'
+      - '.github/workflows/deploy-paper-search.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Ensure service folder exists on VM
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
+            "mkdir -p /opt/scholarai/AI-Agents/paper-search"
+
+      - name: Copy paper-search (incl. hidden files) to VM
+        run: |
+          scp -o StrictHostKeyChecking=no -r AI-Agents/paper-search/. \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/opt/scholarai/AI-Agents/paper-search/
+
+      - name: Deploy Paper Search AI Agent
+        run: |
+          set -e
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+            set -e
+
+            echo "🚀 Starting Paper Search AI Agent deployment..."
+            cd /opt/scholarai/AI-Agents/paper-search
+
+            echo "🧹 Cleaning up old containers/images..."
+            docker rm -f scholar-paper-search || true
+            docker image prune -f --filter "label=service=paper-search" || true
+
+            echo "🔨 Building Paper Search AI Agent..."
+            if ! docker compose -f docker-compose.prod.yml build paper-search; then
+              echo "❌ Build failed, aborting deployment!"
+              exit 1
+            fi
+
+            echo "📦 Starting Paper Search AI Agent..."
+            docker compose -f docker-compose.prod.yml up -d paper-search
+
+            echo "⏳ Waiting for Paper Search AI Agent health..."
+            healthy=0
+            for i in {1..20}; do
+              STATUS=$(docker inspect --format='{{json .State.Health.Status}}' scholar-paper-search 2>/dev/null | tr -d '"')
+              if [ "$STATUS" = "healthy" ]; then
+                echo "✅ Paper Search AI Agent is healthy!"
+                echo "🌐 Access it at: http://${{ secrets.VM_HOST }}:8001"
+                healthy=1
+                break
+              else
+                echo "Still waiting... ($i/20)"
+                sleep 10
+              fi
+            done
+
+            if [ $healthy -eq 0 ]; then
+              echo "❌ Paper Search AI Agent failed to become healthy!"
+              docker logs scholar-paper-search || true
+              exit 1
+            fi
+
+            echo "📊 Current Paper Search AI Agent status:"
+            docker ps --filter "name=scholar-paper-search"
+          EOF
