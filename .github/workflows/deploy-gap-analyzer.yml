@@ -47,6 +47,10 @@ jobs:
             docker rm -f scholar-gap-analyzer || true
             docker image prune -f --filter "label=service=gap-analyzer" || true
 
+            echo "🔑 Fixing directory ownership for container user (uid=100, gid=101)..."
+            sudo mkdir -p ./logs ./paper ./cache ./uploads
+            sudo chown -R 100:101 ./logs ./paper ./cache ./uploads
+
             echo "🔨 Building Gap Analyzer AI Agent..."
             if ! docker compose -f docker-compose.prod.yml build gap-analyzer; then
               echo "❌ Build failed, aborting deployment!"
