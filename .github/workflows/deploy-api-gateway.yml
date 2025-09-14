@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - 'Microservices/api-gateway'
       - 'Microservices/api-gateway/**'
       - '.github/workflows/deploy-api-gateway.yml'
 
