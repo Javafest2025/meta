@@ -6,7 +6,8 @@ on:
     branches:
       - main
     paths:
-      - 'Docker/services-prod.yml'   # adjust path if different
+      - 'Docker/services-prod.yml'
+      - 'Docker/Dockerfile.grobid'
       - '.github/workflows/deploy-infra.yml'
 
 jobs:
@@ -22,10 +23,16 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Copy compose file to VM
+      - name: Ensure Docker folder exists on VM
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "mkdir -p /opt/scholarai/Docker"
+
+      - name: Copy compose + Dockerfile to VM
         run: |
           scp -o StrictHostKeyChecking=no Docker/services-prod.yml \
             ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/opt/scholarai/services-prod.yml
+          scp -o StrictHostKeyChecking=no Docker/Dockerfile.grobid \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/opt/scholarai/Docker/Dockerfile.grobid
 
       - name: Deploy infra on VM
         run: |
@@ -34,3 +41,4 @@ jobs:
             docker compose -f services-prod.yml pull
             docker compose -f services-prod.yml up -d --remove-orphans
           EOF
+
