@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - 'Microservices/service-registry'
       - 'Microservices/service-registry/**'
       - '.github/workflows/deploy-service-registry.yml'
 
