@@ -37,8 +37,24 @@ jobs:
       - name: Deploy infra on VM
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+            set -e
             cd /opt/scholarai
-            docker compose -f services-prod.yml pull
-            docker compose -f services-prod.yml up -d --remove-orphans
-          EOF
 
+            echo "🚀 Starting infra deployment..."
+            docker compose -f services-prod.yml --env-file /opt/scholarai/envs/infra.env pull
+            docker compose -f services-prod.yml --env-file /opt/scholarai/envs/infra.env up -d --remove-orphans
+
+            echo "⏳ Waiting for services to become healthy..."
+            for i in {1..30}; do
+              unhealthy=$(docker ps --format '{{.Names}} {{.Status}}' | grep -v healthy || true)
+              if [ -z "$unhealthy" ]; then
+                echo "✅ All services are healthy!"
+                break
+              fi
+              echo "Still waiting... ($i/30)"
+              sleep 5
+            done
+
+            echo "📊 Service status:"
+            docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+          EOF
