@@ -13,8 +13,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repo with submodules
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
@@ -25,10 +27,8 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "mkdir -p /opt/scholarai/Microservices/service-registry"
 
-      - name: Copy compose + source to VM
+      - name: Copy service-registry (incl. compose + source) to VM
         run: |
-          scp -o StrictHostKeyChecking=no Microservices/service-registry/docker-compose.prod.yml \
-            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/opt/scholarai/Microservices/service-registry/docker-compose.prod.yml
           scp -o StrictHostKeyChecking=no -r Microservices/service-registry/* \
             ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/opt/scholarai/Microservices/service-registry/
 
