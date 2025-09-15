@@ -29,10 +29,13 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
             "mkdir -p /opt/scholarai/Frontend"
 
-      - name: Copy frontend (incl. hidden files) to VM
+      - name: Copy frontend (only changes) to VM
         run: |
-          scp -o StrictHostKeyChecking=no -r Frontend/. \
-            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/opt/scholarai/Frontend/
+          rsync -az --delete \
+            --exclude 'node_modules' \
+            --exclude '.next' \
+            -e "ssh -o StrictHostKeyChecking=no" \
+            Frontend/ ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/opt/scholarai/Frontend/
 
       - name: Deploy Frontend
         run: |
