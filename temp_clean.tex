@@ -1,0 +1,97 @@
+% INTENTIONALLY FLAWED DEMO PAPER FOR CITATION-CHECKER TESTING
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{hyperref}
+\title{Mini Demo Paper: (Intentionally) Messy Citations}
+\author{Test Author}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Expansive, informative datasets are vital foundations for research across many fields.
+Assembling grand datasets often poses difficulty for authors and stakeholders throughout the lifecycle,
+yet we outline a succinct framework of important elements to consider when forging a dataset of your own. % <- near-duplicate phrasing (no citation)
+We also touch on top-down, bottom-up, and hybrid approaches to AI morality with a brief focus on reinforcement learning and principles. % <- mirrors second paper (no/weak citation)
+\end{abstract}
+
+\section{Introduction}
+With the progression of member states to openly publish administrative data, the opportunity to move beyond local-scale studies has advanced with expansive, collaborative, multi-national datasets.% <- mirrors EuroCrops intro (no citation)
+While there are clear advantages of a large and diverse dataset, legacy and manual systems make gathering data at scale an ever-laborious task. % <- mirrors EuroCrops (no citation)
+
+\textbf{Potential issues baked in here:}
+\begin{itemize}
+  \item Unattributed reuse / close paraphrase of published text (this section).
+  \item Irrelevant or incorrect citations to the wrong source (e.g., \cite{Eurocrops2021} about AI ethics).
+  \item Dangling citation keys (e.g., \cite{NonExistingKey}).
+\end{itemize}
+
+\section{Six Challenges in Transnational Datasets}
+We identify six challenges when compiling collaborative, transnational datasets:\footnote{Terms listed without proper source on purpose.}
+\emph{discoverability, accessibility, homogeneity, scalability, distributability, maintainability}. % <- exact list reused, no citation
+
+Even when authorities provide data, platforms may require registration and language barriers persist. % <- mirrors phrasing
+Formats vary (e.g., shapefiles vs geopackages), further impeding research at scale. % <- mirrors phrasing
+
+\paragraph{(Irrelevant citation)} As ethics principles illustrate tensions like fairness and transparency \cite{Eurocrops2021}, % <- cites the wrong paper on purpose
+stakeholders should be notified centrally of updates.\footnote{This sentence mixes topics to bait a checker.}
+
+\section{Top-Down, Bottom-Up, and Hybrid Ethics in AI}
+Top-down AI ethics can be seen as rule-based systems driven by authorities or philosophical doctrines, whereas bottom-up ethics learn from data and experience (e.g., reinforcement learning).
+Hybrid methods mix both, sometimes combining programmed constraints with learned behavior. % <- mirrors second paper
+It has been argued that ``an ethical algorithm is a contradiction in terms.'' % <- unattributed quote intentionally (from a source cited in the ethics paper)
+Moreover, political angles matter when corporate or governmental powers impose principles that sound good but are too broad to be action-guiding.\cite{RobertsMontoyaWrongYear} % <- wrong-year/metadata key
+
+\paragraph{(Misdirected citation)} For a European agricultural case study, see \cite{RobertsMontoya2022}. % <- cites ethics paper for crops case (irrelevant)
+
+\section{Method Sketch}
+We segment paragraphs, fingerprint text, embed sentences, and run cross-encoder reranking.
+Uncited claims about exact procedures and thresholds are left vague by design to trigger ``needs-citation'' warnings.
+
+\section{Conclusion}
+We have distilled challenges and opportunities for large, interwoven datasets and reflected on AI morality across theoretical, technical, and political lenses.
+There is no single correct way to make AI ethical; care must be taken at every turn to right wrongs in the digital age. % <- mirrors second paper conclusion (no citation)
+
+% ------------------ INTENTIONALLY BAD BIBLIOGRAPHY ------------------
+\begin{thebibliography}{9}
+
+\bibitem{Eurocrops2021}
+M.~Schneider, C.~Marchington, and M.~Koerner.
+\newblock Challenges and Opportunities of Large Transnational Datasets: A Case Study on European Administrative Crop Data.
+\newblock \emph{arXiv}, 2021. % <- wrong year on purpose (should be 2022)
+\newblock DOI: \href{https://doi.org/10.0000/fake-doi}{10.0000/fake-doi} % <- fake DOI
+
+\bibitem{Eurocrops2021-dup}
+M.~Schneider, C.~Marchington, and M.~Körner.
+\newblock EuroCrops: A pan-european dataset for time series crop type classification.
+\newblock In \emph{Big Data from Space}, 2021.
+% <- duplicate/near-duplicate and not the same paper; also casing differences; used to trigger duplicate/irrelevant linkages.
+
+\bibitem{RobertsMontoyaWrongYear}
+J.~S.~Roberts and L.~N.~Montoya.
+\newblock Contextualizing Artificially Intelligent Morality: A Meta-Ethnography of Theoretical, Political and Applied Ethics.
+\newblock \emph{arXiv}, 2024. % <- wrong year on purpose
+
+\bibitem{RobertsMontoya2022}
+J.~S.~Roberts and L.~N.~Montoya.
+\newblock Contextualizing Artificially Intelligent Morality: A Meta-Ethnography of Top-Down, Bottom-Up, and Hybrid Models.
+\newblock \emph{Working Paper}. Available at: \url{http://example.com/bad-url} % <- bad/irrelevant URL
+% <- Irrelevant use earlier and two inconsistent titles for the same work.
+
+\bibitem{UnusedEntry}
+A.~Author.
+\newblock Unused Reference to Trigger ``unused bibliography entry''.
+\newblock Some Venue, 2019. % <- never cited in text
+
+\end{thebibliography}
+
+% Notes for your checker:
+% - Missing actual citations for paraphrased EuroCrops material (Intro; Section 2).
+% - Unattributed quote in ethics section.
+% - Wrong-year metadata and inconsistent titles for the ethics paper.
+% - Irrelevant/misdirected citations (EuroCrops cited for ethics; ethics cited for crops).
+% - Dangling key: \cite{NonExistingKey} above has no \bibitem.
+% - Duplicate-ish entry for EuroCrops; fake DOI; bad URL; unused bibliography entry.
+
+\end{document}
