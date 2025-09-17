@@ -1,0 +1,307 @@
+Checking auth state in useAuth hook...
+layout-f88d655e69a92fda.js:1 ProtectedRoute: Auth state check {loading: true, isAuthenticated: false, redirectTo: '/login'}
+1940-9344726013f195e2.js:1 Checking auth state in useAuth hook...
+page-4b08c5b7187c50f8.js:1 🔄 State Change - selectionAddedToChat: false
+page-4b08c5b7187c50f8.js:1 🔄 State Change - selectedText: {text: '', from: 0, to: 0}
+page-4b08c5b7187c50f8.js:1 🔄 State Change - tempSelectedText: 
+page-4b08c5b7187c50f8.js:1 🔄 State Change - showAddToChat: false
+page-4b08c5b7187c50f8.js:1 🔎 Citation State Change - citationCount: 0
+page-4b08c5b7187c50f8.js:1 🔎 Citation State Change - citationIssues: []
+page-4b08c5b7187c50f8.js:1 🔎 Citation State Change - citationBusy: false
+page-4b08c5b7187c50f8.js:1 🔎 Citation State Change - selectedPapers: []
+page-4b08c5b7187c50f8.js:1 Documents state changed: []
+page-4b08c5b7187c50f8.js:1 Current document: null
+layout-f88d655e69a92fda.js:1 ProtectedRoute: Auth state check {loading: false, isAuthenticated: true, redirectTo: '/login'}
+page-4b08c5b7187c50f8.js:1 Resolved params: {id: '2ca28702-5c9b-43db-8eed-002f2cba0416'}
+page-4b08c5b7187c50f8.js:1 Setting projectId to: 2ca28702-5c9b-43db-8eed-002f2cba0416
+3369-55fbaddf66556d8a.js:1 🔍 Fetching project: 2ca28702-5c9b-43db-8eed-002f2cba0416
+3289-f0d213637c79e232.js:1 Current environment: docker
+3289-f0d213637c79e232.js:1 Available env vars: {NEXT_PUBLIC_ENV: 'docker', NEXT_PUBLIC_API_BASE_URL: undefined, NEXT_PUBLIC_DOCKER_BACKEND_URL: 'http://localhost:8989'}
+3289-f0d213637c79e232.js:1 🌐 Making authenticated request to: http://localhost:8989/project-service/api/v1/projects/2ca28702-5c9b-43db-8eed-002f2cba0416?userId=a31653f9-f725-4e3d-ac69-e63beda5c55d
+3289-f0d213637c79e232.js:1 📋 Request headers: {Accept: 'application/json', Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbGFtaW5mYX…k2Mn0.exT06IU1CqAsB2tZwj_JPZIzxYQxmA9K_jogkYQA7EI'}
+3289-f0d213637c79e232.js:1 🔐 Credentials mode: omit
+3369-55fbaddf66556d8a.js:1 🔍 Fetching project: 2ca28702-5c9b-43db-8eed-002f2cba0416
+3289-f0d213637c79e232.js:1 Current environment: docker
+3289-f0d213637c79e232.js:1 Available env vars: {NEXT_PUBLIC_ENV: 'docker', NEXT_PUBLIC_API_BASE_URL: undefined, NEXT_PUBLIC_DOCKER_BACKEND_URL: 'http://localhost:8989'}
+3289-f0d213637c79e232.js:1 🌐 Making authenticated request to: http://localhost:8989/project-service/api/v1/projects/2ca28702-5c9b-43db-8eed-002f2cba0416?userId=a31653f9-f725-4e3d-ac69-e63beda5c55d
+3289-f0d213637c79e232.js:1 📋 Request headers: {Accept: 'application/json', Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbGFtaW5mYX…k2Mn0.exT06IU1CqAsB2tZwj_JPZIzxYQxmA9K_jogkYQA7EI'}
+3289-f0d213637c79e232.js:1 🔐 Credentials mode: omit
+page-4b08c5b7187c50f8.js:1 ProjectId available but no documents, loading documents...
+page-4b08c5b7187c50f8.js:1 Loading documents for project: 2ca28702-5c9b-43db-8eed-002f2cba0416
+3289-f0d213637c79e232.js:1 Current environment: docker
+3289-f0d213637c79e232.js:1 Available env vars: {NEXT_PUBLIC_ENV: 'docker', NEXT_PUBLIC_API_BASE_URL: undefined, NEXT_PUBLIC_DOCKER_BACKEND_URL: 'http://localhost:8989'}
+page-4b08c5b7187c50f8.js:1 Calling API URL: http://localhost:8989/project-service/api/documents/project/2ca28702-5c9b-43db-8eed-002f2cba0416
+3289-f0d213637c79e232.js:1 📊 Response status: 200 OK
+3369-55fbaddf66556d8a.js:1 📊 Project response status: 200 OK
+3369-55fbaddf66556d8a.js:1 ✅ Project data received: {timestamp: '16-09-2025 20:28:45', status: 200, message: 'Project retrieved successfully', data: {…}}
+page-4b08c5b7187c50f8.js:1 API Response status: 200 OK
+page-4b08c5b7187c50f8.js:1 API Response headers: Headers {}
+page-4b08c5b7187c50f8.js:1 API Response data: {timestamp: '16-09-2025 20:28:45', status: 200, message: 'Documents retrieved successfully', data: Array(4)}
+page-4b08c5b7187c50f8.js:1 API Response: {timestamp: '16-09-2025 20:28:45', status: 200, message: 'Documents retrieved successfully', data: Array(4)}
+page-4b08c5b7187c50f8.js:1 Documents found: 4 documents: (4) [{…}, {…}, {…}, {…}]
+page-4b08c5b7187c50f8.js:1 Document 1: {id: '6e51b2cf-2b96-4190-bb59-8a9ad9493ef0', title: 'citation_check.tex', contentLength: 5964, contentPreview: '% INTENTIONALLY FLAWED DEMO PAPER FOR CITATION-CHE… TESTING\n\\documentclass[11pt]{article}\n\\usepac...', fullContent: '% INTENTIONALLY FLAWED DEMO PAPER FOR CITATION-CHE… URL; unused bibliography entry.\n\n\\end{document}\n'}
+page-4b08c5b7187c50f8.js:1 Document 2: {id: 'c2778987-c6a4-4ad7-84ea-8c6eb7ec43c6', title: 'main.tex', contentLength: 34320, contentPreview: '\\documentclass[conference]{IEEEtran}\n\n\\usepackage{…hicx}   % Required for inserting images\n\\usepa...', fullContent: '\\documentclass[conference]{IEEEtran}\n\n\\usepackage{…987–999.\n\n\\end{thebibliography}\n\n\n\\end{document}\n'}
+page-4b08c5b7187c50f8.js:1 Document 3: {id: '53d3789d-54f6-42e2-a173-d1717df517e7', title: 'first.tex', contentLength: 573, contentPreview: '\\documentclass{article}\n\\usepackage{lipsum} % Pack…for dummy text\n\n\\begin{document}\n\n\\title{My Re...', fullContent: '\\documentclass{article}\n\\usepackage{lipsum} % Pack…bsection{Future Work}\n\\lipsum[1]\n\n\\end{document}\n'}
+page-4b08c5b7187c50f8.js:1 Document 4: {id: 'c389bd14-b6ba-4ead-a6ac-ca8783a2080a', title: 'second.tex', contentLength: 332, contentPreview: '% second.tex\n\\documentclass{article}\n\\begin{docume…\n% Start writing your LaTeX document here...\nc...', fullContent: '% second.tex\n\\documentclass{article}\n\\begin{docume…ght be there in a research paper \n\n\\end{document}'}
+page-4b08c5b7187c50f8.js:1 Documents loaded successfully, current document: citation_check.tex
+page-4b08c5b7187c50f8.js:1 Current document content: % INTENTIONALLY FLAWED DEMO PAPER FOR CITATION-CHECKER TESTING
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{hyperref}
+\title{Mini Demo Paper: (Intentionally) Messy Citations}
+\author{Test Author}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Expansive, informative datasets are vital foundations for research across many fields.
+Assembling grand datasets often poses difficulty for authors and stakeholders throughout the lifecycle,
+yet we outline a succinct framework of important elements to consider when forging a dataset of your own. % <- near-duplicate phrasing (no citation)
+We also touch on top-down, bottom-up, and hybrid approaches to AI morality with a brief focus on reinforcement learning and principles. % <- mirrors second paper (no/weak citation)
+\end{abstract}
+
+\section{Introduction}
+With the progression of member states to openly publish administrative data, the opportunity to move beyond local-scale studies has advanced with expansive, collaborative, multi-national datasets.% <- mirrors EuroCrops intro (no citation)
+While there are clear advantages of a large and diverse dataset, legacy and manual systems make gathering data at scale an ever-laborious task. % <- mirrors EuroCrops (no citation)
+
+\textbf{Potential issues baked in here:}
+\begin{itemize}
+  \item Unattributed reuse / close paraphrase of published text (this section).
+  \item Irrelevant or incorrect citations to the wrong source (e.g., \cite{Eurocrops2021} about AI ethics).
+  \item Dangling citation keys (e.g., \cite{NonExistingKey}).
+\end{itemize}
+
+\section{Six Challenges in Transnational Datasets}
+We identify six challenges when compiling collaborative, transnational datasets:\footnote{Terms listed without proper source on purpose.}
+\emph{discoverability, accessibility, homogeneity, scalability, distributability, maintainability}. % <- exact list reused, no citation
+
+Even when authorities provide data, platforms may require registration and language barriers persist. % <- mirrors phrasing
+Formats vary (e.g., shapefiles vs geopackages), further impeding research at scale. % <- mirrors phrasing
+
+\paragraph{(Irrelevant citation)} As ethics principles illustrate tensions like fairness and transparency \cite{Eurocrops2021}, % <- cites the wrong paper on purpose
+stakeholders should be notified centrally of updates.\footnote{This sentence mixes topics to bait a checker.}
+
+\section{Top-Down, Bottom-Up, and Hybrid Ethics in AI}
+Top-down AI ethics can be seen as rule-based systems driven by authorities or philosophical doctrines, whereas bottom-up ethics learn from data and experience (e.g., reinforcement learning).
+Hybrid methods mix both, sometimes combining programmed constraints with learned behavior. % <- mirrors second paper
+It has been argued that ``an ethical algorithm is a contradiction in terms.'' % <- unattributed quote intentionally (from a source cited in the ethics paper)
+Moreover, political angles matter when corporate or governmental powers impose principles that sound good but are too broad to be action-guiding.\cite{RobertsMontoyaWrongYear} % <- wrong-year/metadata key
+
+\paragraph{(Misdirected citation)} For a European agricultural case study, see \cite{RobertsMontoya2022}. % <- cites ethics paper for crops case (irrelevant)
+
+\section{Method Sketch}
+We segment paragraphs, fingerprint text, embed sentences, and run cross-encoder reranking.
+Uncited claims about exact procedures and thresholds are left vague by design to trigger ``needs-citation'' warnings.
+
+\section{Conclusion}
+We have distilled challenges and opportunities for large, interwoven datasets and reflected on AI morality across theoretical, technical, and political lenses.
+There is no single correct way to make AI ethical; care must be taken at every turn to right wrongs in the digital age. % <- mirrors second paper conclusion (no citation)
+
+% ------------------ INTENTIONALLY BAD BIBLIOGRAPHY ------------------
+\begin{thebibliography}{9}
+
+\bibitem{Eurocrops2021}
+M.~Schneider, C.~Marchington, and M.~Koerner.
+\newblock Challenges and Opportunities of Large Transnational Datasets: A Case Study on European Administrative Crop Data.
+\newblock \emph{arXiv}, 2021. % <- wrong year on purpose (should be 2022)
+\newblock DOI: \href{https://doi.org/10.0000/fake-doi}{10.0000/fake-doi} % <- fake DOI
+
+\bibitem{Eurocrops2021-dup}
+M.~Schneider, C.~Marchington, and M.~Körner.
+\newblock EuroCrops: A pan-european dataset for time series crop type classification.
+\newblock In \emph{Big Data from Space}, 2021.
+% <- duplicate/near-duplicate and not the same paper; also casing differences; used to trigger duplicate/irrelevant linkages.
+
+\bibitem{RobertsMontoyaWrongYear}
+J.~S.~Roberts and L.~N.~Montoya.
+\newblock Contextualizing Artificially Intelligent Morality: A Meta-Ethnography of Theoretical, Political and Applied Ethics.
+\newblock \emph{arXiv}, 2024. % <- wrong year on purpose
+
+\bibitem{RobertsMontoya2022}
+J.~S.~Roberts and L.~N.~Montoya.
+\newblock Contextualizing Artificially Intelligent Morality: A Meta-Ethnography of Top-Down, Bottom-Up, and Hybrid Models.
+\newblock \emph{Working Paper}. Available at: \url{http://example.com/bad-url} % <- bad/irrelevant URL
+% <- Irrelevant use earlier and two inconsistent titles for the same work.
+
+\bibitem{UnusedEntry}
+A.~Author.
+\newblock Unused Reference to Trigger ``unused bibliography entry''.
+\newblock Some Venue, 2019. % <- never cited in text
+
+\end{thebibliography}
+
+% Notes for your checker:
+% - Missing actual citations for paraphrased EuroCrops material (Intro; Section 2).
+% - Unattributed quote in ethics section.
+% - Wrong-year metadata and inconsistent titles for the ethics paper.
+% - Irrelevant/misdirected citations (EuroCrops cited for ethics; ethics cited for crops).
+% - Dangling key: \cite{NonExistingKey} above has no \bibitem.
+% - Duplicate-ish entry for EuroCrops; fake DOI; bad URL; unused bibliography entry.
+
+\end{document}
+
+page-4b08c5b7187c50f8.js:1 Documents state changed: (4) [{…}, {…}, {…}, {…}]
+page-4b08c5b7187c50f8.js:1 Current document: {id: '6e51b2cf-2b96-4190-bb59-8a9ad9493ef0', projectId: '2ca28702-5c9b-43db-8eed-002f2cba0416', title: 'citation_check.tex', content: '% INTENTIONALLY FLAWED DEMO PAPER FOR CITATION-CHE… URL; unused bibliography entry.\n\n\\end{document}\n', documentType: 'LATEX', …}
+page-4b08c5b7187c50f8.js:1 Document changed, clearing version history
+3289-f0d213637c79e232.js:1 📊 Response status: 200 OK
+3369-55fbaddf66556d8a.js:1 📊 Project response status: 200 OK
+3369-55fbaddf66556d8a.js:1 ✅ Project data received: {timestamp: '16-09-2025 20:28:45', status: 200, message: 'Project retrieved successfully', data: {…}}
+page-4b08c5b7187c50f8.js:1 Project loaded: {id: '2ca28702-5c9b-43db-8eed-002f2cba0416', name: 'Quantum Computing Enhancement', description: null, domain: 'Quantum Computing', topics: Array(2), …}
+page-4b08c5b7187c50f8.js:1 Calling loadDocuments with projectId: 2ca28702-5c9b-43db-8eed-002f2cba0416
+page-4b08c5b7187c50f8.js:1 Loading documents for project: 2ca28702-5c9b-43db-8eed-002f2cba0416
+3289-f0d213637c79e232.js:1 Current environment: docker
+3289-f0d213637c79e232.js:1 Available env vars: {NEXT_PUBLIC_ENV: 'docker', NEXT_PUBLIC_API_BASE_URL: undefined, NEXT_PUBLIC_DOCKER_BACKEND_URL: 'http://localhost:8989'}
+page-4b08c5b7187c50f8.js:1 Calling API URL: http://localhost:8989/project-service/api/documents/project/2ca28702-5c9b-43db-8eed-002f2cba0416
+page-4b08c5b7187c50f8.js:1 API Response status: 200 OK
+page-4b08c5b7187c50f8.js:1 API Response headers: Headers {}
+page-4b08c5b7187c50f8.js:1 API Response data: {timestamp: '16-09-2025 20:28:45', status: 200, message: 'Documents retrieved successfully', data: Array(4)}
+page-4b08c5b7187c50f8.js:1 API Response: {timestamp: '16-09-2025 20:28:45', status: 200, message: 'Documents retrieved successfully', data: Array(4)}
+page-4b08c5b7187c50f8.js:1 Documents found: 4 documents: (4) [{…}, {…}, {…}, {…}]
+page-4b08c5b7187c50f8.js:1 Document 1: {id: '6e51b2cf-2b96-4190-bb59-8a9ad9493ef0', title: 'citation_check.tex', contentLength: 5964, contentPreview: '% INTENTIONALLY FLAWED DEMO PAPER FOR CITATION-CHE… TESTING\n\\documentclass[11pt]{article}\n\\usepac...', fullContent: '% INTENTIONALLY FLAWED DEMO PAPER FOR CITATION-CHE… URL; unused bibliography entry.\n\n\\end{document}\n'}
+page-4b08c5b7187c50f8.js:1 Document 2: {id: 'c2778987-c6a4-4ad7-84ea-8c6eb7ec43c6', title: 'main.tex', contentLength: 34320, contentPreview: '\\documentclass[conference]{IEEEtran}\n\n\\usepackage{…hicx}   % Required for inserting images\n\\usepa...', fullContent: '\\documentclass[conference]{IEEEtran}\n\n\\usepackage{…987–999.\n\n\\end{thebibliography}\n\n\n\\end{document}\n'}
+page-4b08c5b7187c50f8.js:1 Document 3: {id: '53d3789d-54f6-42e2-a173-d1717df517e7', title: 'first.tex', contentLength: 573, contentPreview: '\\documentclass{article}\n\\usepackage{lipsum} % Pack…for dummy text\n\n\\begin{document}\n\n\\title{My Re...', fullContent: '\\documentclass{article}\n\\usepackage{lipsum} % Pack…bsection{Future Work}\n\\lipsum[1]\n\n\\end{document}\n'}
+page-4b08c5b7187c50f8.js:1 Document 4: {id: 'c389bd14-b6ba-4ead-a6ac-ca8783a2080a', title: 'second.tex', contentLength: 332, contentPreview: '% second.tex\n\\documentclass{article}\n\\begin{docume…\n% Start writing your LaTeX document here...\nc...', fullContent: '% second.tex\n\\documentclass{article}\n\\begin{docume…ght be there in a research paper \n\n\\end{document}'}
+page-4b08c5b7187c50f8.js:1 Documents loaded successfully, current document: citation_check.tex
+page-4b08c5b7187c50f8.js:1 Current document content: % INTENTIONALLY FLAWED DEMO PAPER FOR CITATION-CHECKER TESTING
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{hyperref}
+\title{Mini Demo Paper: (Intentionally) Messy Citations}
+\author{Test Author}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Expansive, informative datasets are vital foundations for research across many fields.
+Assembling grand datasets often poses difficulty for authors and stakeholders throughout the lifecycle,
+yet we outline a succinct framework of important elements to consider when forging a dataset of your own. % <- near-duplicate phrasing (no citation)
+We also touch on top-down, bottom-up, and hybrid approaches to AI morality with a brief focus on reinforcement learning and principles. % <- mirrors second paper (no/weak citation)
+\end{abstract}
+
+\section{Introduction}
+With the progression of member states to openly publish administrative data, the opportunity to move beyond local-scale studies has advanced with expansive, collaborative, multi-national datasets.% <- mirrors EuroCrops intro (no citation)
+While there are clear advantages of a large and diverse dataset, legacy and manual systems make gathering data at scale an ever-laborious task. % <- mirrors EuroCrops (no citation)
+
+\textbf{Potential issues baked in here:}
+\begin{itemize}
+  \item Unattributed reuse / close paraphrase of published text (this section).
+  \item Irrelevant or incorrect citations to the wrong source (e.g., \cite{Eurocrops2021} about AI ethics).
+  \item Dangling citation keys (e.g., \cite{NonExistingKey}).
+\end{itemize}
+
+\section{Six Challenges in Transnational Datasets}
+We identify six challenges when compiling collaborative, transnational datasets:\footnote{Terms listed without proper source on purpose.}
+\emph{discoverability, accessibility, homogeneity, scalability, distributability, maintainability}. % <- exact list reused, no citation
+
+Even when authorities provide data, platforms may require registration and language barriers persist. % <- mirrors phrasing
+Formats vary (e.g., shapefiles vs geopackages), further impeding research at scale. % <- mirrors phrasing
+
+\paragraph{(Irrelevant citation)} As ethics principles illustrate tensions like fairness and transparency \cite{Eurocrops2021}, % <- cites the wrong paper on purpose
+stakeholders should be notified centrally of updates.\footnote{This sentence mixes topics to bait a checker.}
+
+\section{Top-Down, Bottom-Up, and Hybrid Ethics in AI}
+Top-down AI ethics can be seen as rule-based systems driven by authorities or philosophical doctrines, whereas bottom-up ethics learn from data and experience (e.g., reinforcement learning).
+Hybrid methods mix both, sometimes combining programmed constraints with learned behavior. % <- mirrors second paper
+It has been argued that ``an ethical algorithm is a contradiction in terms.'' % <- unattributed quote intentionally (from a source cited in the ethics paper)
+Moreover, political angles matter when corporate or governmental powers impose principles that sound good but are too broad to be action-guiding.\cite{RobertsMontoyaWrongYear} % <- wrong-year/metadata key
+
+\paragraph{(Misdirected citation)} For a European agricultural case study, see \cite{RobertsMontoya2022}. % <- cites ethics paper for crops case (irrelevant)
+
+\section{Method Sketch}
+We segment paragraphs, fingerprint text, embed sentences, and run cross-encoder reranking.
+Uncited claims about exact procedures and thresholds are left vague by design to trigger ``needs-citation'' warnings.
+
+\section{Conclusion}
+We have distilled challenges and opportunities for large, interwoven datasets and reflected on AI morality across theoretical, technical, and political lenses.
+There is no single correct way to make AI ethical; care must be taken at every turn to right wrongs in the digital age. % <- mirrors second paper conclusion (no citation)
+
+% ------------------ INTENTIONALLY BAD BIBLIOGRAPHY ------------------
+\begin{thebibliography}{9}
+
+\bibitem{Eurocrops2021}
+M.~Schneider, C.~Marchington, and M.~Koerner.
+\newblock Challenges and Opportunities of Large Transnational Datasets: A Case Study on European Administrative Crop Data.
+\newblock \emph{arXiv}, 2021. % <- wrong year on purpose (should be 2022)
+\newblock DOI: \href{https://doi.org/10.0000/fake-doi}{10.0000/fake-doi} % <- fake DOI
+
+\bibitem{Eurocrops2021-dup}
+M.~Schneider, C.~Marchington, and M.~Körner.
+\newblock EuroCrops: A pan-european dataset for time series crop type classification.
+\newblock In \emph{Big Data from Space}, 2021.
+% <- duplicate/near-duplicate and not the same paper; also casing differences; used to trigger duplicate/irrelevant linkages.
+
+\bibitem{RobertsMontoyaWrongYear}
+J.~S.~Roberts and L.~N.~Montoya.
+\newblock Contextualizing Artificially Intelligent Morality: A Meta-Ethnography of Theoretical, Political and Applied Ethics.
+\newblock \emph{arXiv}, 2024. % <- wrong year on purpose
+
+\bibitem{RobertsMontoya2022}
+J.~S.~Roberts and L.~N.~Montoya.
+\newblock Contextualizing Artificially Intelligent Morality: A Meta-Ethnography of Top-Down, Bottom-Up, and Hybrid Models.
+\newblock \emph{Working Paper}. Available at: \url{http://example.com/bad-url} % <- bad/irrelevant URL
+% <- Irrelevant use earlier and two inconsistent titles for the same work.
+
+\bibitem{UnusedEntry}
+A.~Author.
+\newblock Unused Reference to Trigger ``unused bibliography entry''.
+\newblock Some Venue, 2019. % <- never cited in text
+
+\end{thebibliography}
+
+% Notes for your checker:
+% - Missing actual citations for paraphrased EuroCrops material (Intro; Section 2).
+% - Unattributed quote in ethics section.
+% - Wrong-year metadata and inconsistent titles for the ethics paper.
+% - Irrelevant/misdirected citations (EuroCrops cited for ethics; ethics cited for crops).
+% - Dangling key: \cite{NonExistingKey} above has no \bibitem.
+% - Duplicate-ish entry for EuroCrops; fake DOI; bad URL; unused bibliography entry.
+
+\end{document}
+
+page-4b08c5b7187c50f8.js:1 Loading papers for project: 2ca28702-5c9b-43db-8eed-002f2cba0416
+page-4b08c5b7187c50f8.js:1 Documents state changed: (4) [{…}, {…}, {…}, {…}]
+page-4b08c5b7187c50f8.js:1 Current document: {id: '6e51b2cf-2b96-4190-bb59-8a9ad9493ef0', projectId: '2ca28702-5c9b-43db-8eed-002f2cba0416', title: 'citation_check.tex', content: '% INTENTIONALLY FLAWED DEMO PAPER FOR CITATION-CHE… URL; unused bibliography entry.\n\n\\end{document}\n', documentType: 'LATEX', …}
+3369-55fbaddf66556d8a.js:1 🔍 Fetching project library: 2ca28702-5c9b-43db-8eed-002f2cba0416 for user: a31653f9-f725-4e3d-ac69-e63beda5c55d
+3289-f0d213637c79e232.js:1 Current environment: docker
+3289-f0d213637c79e232.js:1 Available env vars: {NEXT_PUBLIC_ENV: 'docker', NEXT_PUBLIC_API_BASE_URL: undefined, NEXT_PUBLIC_DOCKER_BACKEND_URL: 'http://localhost:8989'}
+3289-f0d213637c79e232.js:1 🌐 Making authenticated request to: http://localhost:8989/project-service/api/v1/library/project/2ca28702-5c9b-43db-8eed-002f2cba0416
+3289-f0d213637c79e232.js:1 📋 Request headers: {Accept: 'application/json', Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbGFtaW5mYX…k2Mn0.exT06IU1CqAsB2tZwj_JPZIzxYQxmA9K_jogkYQA7EI', Content-Type: 'application/json'}
+3289-f0d213637c79e232.js:1 🔐 Credentials mode: omit
+3289-f0d213637c79e232.js:1 📊 Response status: 200 OK
+3369-55fbaddf66556d8a.js:1 📊 Get project library response status: 200 OK
+3369-55fbaddf66556d8a.js:1 ✅ Project library retrieved successfully: {timestamp: '16-09-2025 20:28:45', status: 200, message: 'Project library retrieved successfully', data: {…}}
+page-4b08c5b7187c50f8.js:1 Loaded 20 papers, 2 in LaTeX context
+page-4b08c5b7187c50f8.js:1 Papers loaded for LaTeX context: 2
+page-4b08c5b7187c50f8.js:1 🔎 Citation State Change - selectedPapers: (2) [{…}, {…}]0: {id: 'cf9836e8-c5c9-4734-8750-ffe820f2c3aa', title: 'Challenges and Opportunities of Large Transnationa…A Case Study on European Administrative Crop Data', abstract: 'Expansive, informative datasets are vital in provi…uld consider when forging a dataset of their own.', authors: Array(3), publicationDate: '2022-09-19', …}1: {id: '89dc0504-0c5a-4aec-87f8-baa3d827c58b', title: 'Contextualizing Artificially Intelligent Morality:…cal and Applied Ethics in Artificial Intelligence', abstract: 'In this meta-ethnography, we explore three differe…ld circumstances, and\npossible ensuing realities.', authors: Array(2), publicationDate: '2022-04-15', …}length: 2[[Prototype]]: Array(0)
+page-4b08c5b7187c50f8.js:1 🔎 Run Citation Check clicked! citationBusy: false
+page-4b08c5b7187c50f8.js:1 🔎 Starting citation check for document: 6e51b2cf-2b96-4190-bb59-8a9ad9493ef0
+page-4b08c5b7187c50f8.js:1 🔎 Selected papers for citation check: (2) [{…}, {…}]
+page-4b08c5b7187c50f8.js:1 🔎 Selected papers count: 2
+page-4b08c5b7187c50f8.js:1 🔎 Project ID: 2ca28702-5c9b-43db-8eed-002f2cba0416
+page-4b08c5b7187c50f8.js:1 🔎 Content length: 5964
+page-4b08c5b7187c50f8.js:1 🔎 Safe papers: (2) [{…}, {…}]
+3289-f0d213637c79e232.js:1 Current environment: docker
+3289-f0d213637c79e232.js:1 Available env vars: {NEXT_PUBLIC_ENV: 'docker', NEXT_PUBLIC_API_BASE_URL: undefined, NEXT_PUBLIC_DOCKER_BACKEND_URL: 'http://localhost:8989'}
+page-4b08c5b7187c50f8.js:1 🔎 Citation State Change - citationBusy: true
+page-4b08c5b7187c50f8.js:1 🔎 Citation check response: {jobId: '0b80cd91-d12d-4fa1-b79c-0e3eaca00f28'}
+3289-f0d213637c79e232.js:1 Current environment: docker
+3289-f0d213637c79e232.js:1 Available env vars: {NEXT_PUBLIC_ENV: 'docker', NEXT_PUBLIC_API_BASE_URL: undefined, NEXT_PUBLIC_DOCKER_BACKEND_URL: 'http://localhost:8989'}
+page-4b08c5b7187c50f8.js:1 🔎 Citation job status: {jobId: '0b80cd91-d12d-4fa1-b79c-0e3eaca00f28', status: 'DONE', step: 'DONE', progressPct: 100, summary: {…}, …}
+page-4b08c5b7187c50f8.js:1 🔎 Citation check COMPLETED - setting issues: (2) [{…}, {…}]
+page-4b08c5b7187c50f8.js:1 🔎 Citation check completed: 2 issues found
+page-4b08c5b7187c50f8.js:1 🔎 Citation issues set to: (2) [{…}, {…}]
+page-4b08c5b7187c50f8.js:1 🔎 Citation State Change - citationCount: 2
+page-4b08c5b7187c50f8.js:1 🔎 Citation State Change - citationIssues: (2) [{…}, {…}]
+page-4b08c5b7187c50f8.js:1 🔎 Citation State Change - citationBusy: false
+page-4b08c5b7187c50f8.js:1 🔎 Citation button clicked! citationCount: 2
+page-4b08c5b7187c50f8.js:1 Opening citation panel with 2 issues
+page-4b08c5b7187c50f8.js:1 🔎 Citation button clicked! citationCount: 2
+page-4b08c5b7187c50f8.js:1 Opening citation panel with 2 issues
+page-4b08c5b7187c50f8.js:1 Navigating to issue at line undefined position NaN
+page-4b08c5b7187c50f8.js:1 🔎 Citation button clicked! citationCount: 2
+page-4b08c5b7187c50f8.js:1 Opening citation panel with 2 issues
+page-4b08c5b7187c50f8.js:1 Navigating to issue at line undefined position NaN

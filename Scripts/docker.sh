@@ -264,6 +264,16 @@ start_applications() {
         return 1
     fi
     
+    # 9. NGINX Proxy
+    print_step "2.9" "Starting NGINX Proxy..."
+    if docker compose -f "$DOCKER_APP" up -d nginx-proxy; then
+        echo -e "${GREEN}✓ NGINX Proxy started${NC}"
+        echo -e "${GREEN}✓ Platform accessible at http://localhost${NC}"
+    else
+        echo -e "${RED}✗ Failed to start NGINX Proxy${NC}"
+        return 1
+    fi
+    
     echo -e "${GREEN}✓ All application services started successfully!${NC}"
     return 0
 }
@@ -329,13 +339,17 @@ start_service() {
             echo -e "${CYAN}Starting Frontend...${NC}"
             docker compose -f "$DOCKER_APP" up -d frontend
             ;;
+        "nginx"|"nginx-proxy")
+            echo -e "${CYAN}Starting NGINX Proxy...${NC}"
+            docker compose -f "$DOCKER_APP" up -d nginx-proxy
+            ;;
         "grobid")
             echo -e "${CYAN}Starting GROBID PDF Extractor...${NC}"
             docker compose -f "$DOCKER_SERVICES" up -d grobid
             ;;
         *)
             echo -e "${RED}Unknown service: $service${NC}"
-            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, frontend, grobid${NC}"
+            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, frontend, nginx, grobid${NC}"
             return 1
             ;;
     esac
@@ -407,6 +421,12 @@ restart_service() {
             docker compose -f "$DOCKER_APP" build frontend
             docker compose -f "$DOCKER_APP" up -d frontend
             ;;
+        "nginx"|"nginx-proxy")
+            echo -e "${CYAN}Restarting NGINX Proxy (with config reload)...${NC}"
+            docker compose -f "$DOCKER_APP" stop nginx-proxy
+            docker compose -f "$DOCKER_APP" build nginx-proxy
+            docker compose -f "$DOCKER_APP" up -d nginx-proxy
+            ;;
         "grobid")
             echo -e "${CYAN}Restarting GROBID PDF Extractor (with rebuild)...${NC}"
             docker compose -f "$DOCKER_SERVICES" stop grobid
@@ -415,7 +435,7 @@ restart_service() {
             ;;
         *)
             echo -e "${RED}Unknown service: $service${NC}"
-            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, extractor, frontend, grobid${NC}"
+            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, extractor, frontend, nginx, grobid${NC}"
             return 1
             ;;
     esac
@@ -465,13 +485,17 @@ stop_service() {
             echo -e "${CYAN}Stopping Frontend...${NC}"
             docker compose -f "$DOCKER_APP" stop frontend
             ;;
+        "nginx"|"nginx-proxy")
+            echo -e "${CYAN}Stopping NGINX Proxy...${NC}"
+            docker compose -f "$DOCKER_APP" stop nginx-proxy
+            ;;
         "grobid")
             echo -e "${CYAN}Stopping GROBID PDF Extractor...${NC}"
             docker compose -f "$DOCKER_SERVICES" stop grobid
             ;;
         *)
             echo -e "${RED}Unknown service: $service${NC}"
-            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, extractor, frontend, grobid${NC}"
+            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, extractor, frontend, nginx, grobid${NC}"
             return 1
             ;;
     esac
@@ -498,8 +522,9 @@ start_all() {
     
     echo -e "${GREEN}🎉 ScholarAI platform is now running!${NC}"
     echo -e "${CYAN}Access points:${NC}"
-    echo -e "${GREEN}• Frontend:${NC} http://localhost:3000"
-    echo -e "${GREEN}• API Gateway:${NC} http://localhost:8989"
+    echo -e "${GREEN}• Main Platform:${NC} http://localhost (via NGINX Proxy)"
+    echo -e "${GREEN}• Frontend:${NC} http://localhost:3000 (direct access)"
+    echo -e "${GREEN}• API Gateway:${NC} http://localhost:8989 (direct access)"
     echo -e "${GREEN}• Service Registry:${NC} http://localhost:8761"
     echo -e "${GREEN}• Paper Search Service:${NC} http://localhost:8001"
     echo -e "${GREEN}• PDF Extractor Service:${NC} http://localhost:8002"
@@ -727,6 +752,7 @@ show_help() {
     echo -e "  • paper-search     - Paper Search Service (FastAPI)"
     echo -e "  • extractor        - PDF Extractor Service (FastAPI)"
     echo -e "  • frontend         - Next.js Frontend"
+    echo -e "  • nginx            - NGINX Reverse Proxy (SSE Support)"
     echo -e "  • grobid           - GROBID PDF Extractor Service"
     echo ""
     echo -e "${BLUE}Utility Commands:${NC}"
