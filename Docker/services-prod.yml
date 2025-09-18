@@ -195,11 +195,11 @@ services:
     volumes:
       - grobid-home:/opt/grobid/grobid-home
     environment:
-      # down from 4g → 1g. Bump only if you see OOM in logs.
-      JAVA_OPTS: "-Xms512m -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+      # Increased memory allocation for better performance
+      JAVA_OPTS: "-Xms1g -Xmx3g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
     cpus: 2.0
-    mem_limit: 3g
-    mem_reservation: 1g
+    mem_limit: 3.5g
+    mem_reservation: 1.5g
     pids_limit: 512  
     logging:
       driver: "json-file"
