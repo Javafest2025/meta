@@ -1,0 +1,82 @@
+name: Deploy API Gateway
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Microservices/api-gateway'
+      - 'Microservices/api-gateway/**'
+      - '.github/workflows/deploy-api-gateway.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Ensure service folder exists on VM
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
+            "mkdir -p /opt/scholarai/Microservices/api-gateway"
+
+      - name: Copy api-gateway (incl. hidden files) to VM
+        run: |
+          scp -o StrictHostKeyChecking=no -r Microservices/api-gateway/. \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/opt/scholarai/Microservices/api-gateway/
+
+      - name: Deploy API Gateway
+        run: |
+          set -e
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+            set -e
+
+            echo "🚀 Starting API Gateway deployment..."
+            cd /opt/scholarai/Microservices/api-gateway
+
+            echo "🧹 Cleaning up old containers/images..."
+            docker rm -f scholar-api-gateway || true
+            docker image prune -f --filter "label=service=api-gateway" || true
+
+            echo "🔨 Building API Gateway..."
+            if ! docker compose -f docker-compose.prod.yml build api-gateway; then
+              echo "❌ Build failed, aborting deployment!"
+              exit 1
+            fi
+
+            echo "📦 Starting API Gateway..."
+            docker compose -f docker-compose.prod.yml up -d api-gateway
+
+            echo "⏳ Waiting for API Gateway health..."
+            healthy=0
+            for i in {1..20}; do
+              STATUS=$(docker inspect --format='{{json .State.Health.Status}}' scholar-api-gateway 2>/dev/null | tr -d '"')
+              if [ "$STATUS" = "healthy" ]; then
+                echo "✅ API Gateway is healthy!"
+                echo "🌐 Access it at: http://${{ secrets.VM_HOST }}:8989"
+                healthy=1
+                break
+              else
+                echo "Still waiting... ($i/20)"
+                sleep 10
+              fi
+            done
+
+            if [ $healthy -eq 0 ]; then
+              echo "❌ API Gateway failed to become healthy!"
+              docker logs scholar-api-gateway || true
+              exit 1
+            fi
+
+            echo "📊 Current API Gateway status:"
+            docker ps --filter "name=scholar-api-gateway"
+          EOF

@@ -21,9 +21,19 @@ NC='\033[0m'
 ###############################################################################
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
-DOCKER_APP="$ROOT_DIR/Docker/apps.yml"
 DOCKER_SERVICES="$ROOT_DIR/Docker/services.yml"
 DOCKER_ENV="$ROOT_DIR/Docker/.env"
+
+# Individual service docker-compose file paths
+SERVICE_REGISTRY_COMPOSE="$ROOT_DIR/Microservices/service-registry/docker-compose.yml"
+API_GATEWAY_COMPOSE="$ROOT_DIR/Microservices/api-gateway/docker-compose.yml"
+NOTIFICATION_COMPOSE="$ROOT_DIR/Microservices/notification-service/docker-compose.yml"
+PROJECT_COMPOSE="$ROOT_DIR/Microservices/project-service/docker-compose.yml"
+USER_COMPOSE="$ROOT_DIR/Microservices/user-service/docker-compose.yml"
+PAPER_SEARCH_COMPOSE="$ROOT_DIR/AI-Agents/paper-search/docker-compose.yml"
+EXTRACTOR_COMPOSE="$ROOT_DIR/AI-Agents/extractor/docker-compose.yml"
+GAP_ANALYZER_COMPOSE="$ROOT_DIR/AI-Agents/gap-analyzer/docker-compose.yml"
+FRONTEND_COMPOSE="$ROOT_DIR/Frontend/docker-compose.yml"
 
 # Load environment variables from Docker .env file
 if [[ -f "$DOCKER_ENV" ]]; then
@@ -42,7 +52,7 @@ get_container_info() {
 
 print_header() {
     echo -e "${PURPLE}╔══════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${PURPLE}║                    ScholarAI Platform Control               ║${NC}"
+    echo -e "${PURPLE}║                    ScholarAI Platform Control                ║${NC}"
     echo -e "${PURPLE}╚══════════════════════════════════════════════════════════════╝${NC}"
 }
 
@@ -167,11 +177,10 @@ stop_infrastructure() {
 start_applications() {
     print_step "2" "Starting application services in sequence..."
     
-    cd "$ROOT_DIR"
-    
     # 1. Service Registry
     print_step "2.1" "Starting Service Registry..."
-    if docker compose -f "$DOCKER_APP" up -d service-registry; then
+    cd "$ROOT_DIR/Microservices/service-registry"
+    if docker compose -f "$SERVICE_REGISTRY_COMPOSE" up -d; then
         echo -e "${GREEN}✓ Service Registry started${NC}"
         if ! wait_for_service "Service Registry" "8761"; then
             echo -e "${RED}✗ Service Registry failed to become ready${NC}"
@@ -184,7 +193,8 @@ start_applications() {
     
     # 2. API Gateway
     print_step "2.2" "Starting API Gateway..."
-    if docker compose -f "$DOCKER_APP" up -d api-gateway; then
+    cd "$ROOT_DIR/Microservices/api-gateway"
+    if docker compose -f "$API_GATEWAY_COMPOSE" up -d; then
         echo -e "${GREEN}✓ API Gateway started${NC}"
         if ! wait_for_service "API Gateway" "8989"; then
             echo -e "${RED}✗ API Gateway failed to become ready${NC}"
@@ -197,7 +207,8 @@ start_applications() {
     
     # 3. Notification Service
     print_step "2.3" "Starting Notification Service..."
-    if docker compose -f "$DOCKER_APP" up -d notification-service; then
+    cd "$ROOT_DIR/Microservices/notification-service"
+    if docker compose -f "$NOTIFICATION_COMPOSE" up -d; then
         echo -e "${GREEN}✓ Notification Service started${NC}"
         if ! wait_for_service "Notification Service" "8082"; then
             echo -e "${RED}✗ Notification Service failed to become ready${NC}"
@@ -210,7 +221,8 @@ start_applications() {
     
     # 4. Project Service
     print_step "2.4" "Starting Project Service..."
-    if docker compose -f "$DOCKER_APP" up -d project-service; then
+    cd "$ROOT_DIR/Microservices/project-service"
+    if docker compose -f "$PROJECT_COMPOSE" up -d; then
         echo -e "${GREEN}✓ Project Service started${NC}"
         if ! wait_for_service "Project Service" "8083"; then
             echo -e "${RED}✗ Project Service failed to become ready${NC}"
@@ -223,7 +235,8 @@ start_applications() {
     
     # 5. User Service
     print_step "2.5" "Starting User Service..."
-    if docker compose -f "$DOCKER_APP" up -d user-service; then
+    cd "$ROOT_DIR/Microservices/user-service"
+    if docker compose -f "$USER_COMPOSE" up -d; then
         echo -e "${GREEN}✓ User Service started${NC}"
         if ! wait_for_service "User Service" "8081"; then
             return 1
@@ -235,7 +248,8 @@ start_applications() {
     
     # 6. Paper Search Service
     print_step "2.6" "Starting Paper Search Service..."
-    if docker compose -f "$DOCKER_APP" up -d paper-search; then
+    cd "$ROOT_DIR/AI-Agents/paper-search"
+    if docker compose -f "$PAPER_SEARCH_COMPOSE" up -d; then
         echo -e "${GREEN}✓ Paper Search Service started${NC}"
         if ! wait_for_service "Paper Search Service" "8001"; then
             return 1
@@ -247,7 +261,8 @@ start_applications() {
     
     # 7. PDF Extractor Service
     print_step "2.7" "Starting PDF Extractor Service..."
-    if docker compose -f "$DOCKER_APP" up -d extractor; then
+    cd "$ROOT_DIR/AI-Agents/extractor"
+    if docker compose -f "$EXTRACTOR_COMPOSE" up -d; then
         echo -e "${GREEN}✓ PDF Extractor Service started${NC}"
         if ! wait_for_service "PDF Extractor Service" "8002"; then
             return 1
@@ -257,9 +272,23 @@ start_applications() {
         return 1
     fi
     
-    # 8. Frontend
-    print_step "2.8" "Starting Frontend..."
-    if docker compose -f "$DOCKER_APP" up -d frontend; then
+    # 8. Gap Analyzer Service
+    print_step "2.8" "Starting Gap Analyzer Service..."
+    cd "$ROOT_DIR/AI-Agents/gap-analyzer"
+    if docker compose -f "$GAP_ANALYZER_COMPOSE" up -d; then
+        echo -e "${GREEN}✓ Gap Analyzer Service started${NC}"
+        if ! wait_for_service "Gap Analyzer Service" "8003"; then
+            return 1
+        fi
+    else
+        echo -e "${RED}✗ Failed to start Gap Analyzer Service${NC}"
+        return 1
+    fi
+    
+    # 9. Frontend
+    print_step "2.9" "Starting Frontend..."
+    cd "$ROOT_DIR/Frontend"
+    if docker compose -f "$FRONTEND_COMPOSE" up -d; then
         echo -e "${GREEN}✓ Frontend started${NC}"
         if ! wait_for_frontend; then
             return 1
@@ -276,15 +305,32 @@ start_applications() {
 stop_applications() {
     print_step "2" "Stopping application services..."
     
-    cd "$ROOT_DIR"
+    # Stop services in reverse order
+    local services=(
+        "Frontend:$ROOT_DIR/Frontend:$FRONTEND_COMPOSE"
+        "Gap Analyzer:$ROOT_DIR/AI-Agents/gap-analyzer:$GAP_ANALYZER_COMPOSE"
+        "PDF Extractor:$ROOT_DIR/AI-Agents/extractor:$EXTRACTOR_COMPOSE"
+        "Paper Search:$ROOT_DIR/AI-Agents/paper-search:$PAPER_SEARCH_COMPOSE"
+        "User Service:$ROOT_DIR/Microservices/user-service:$USER_COMPOSE"
+        "Project Service:$ROOT_DIR/Microservices/project-service:$PROJECT_COMPOSE"
+        "Notification Service:$ROOT_DIR/Microservices/notification-service:$NOTIFICATION_COMPOSE"
+        "API Gateway:$ROOT_DIR/Microservices/api-gateway:$API_GATEWAY_COMPOSE"
+        "Service Registry:$ROOT_DIR/Microservices/service-registry:$SERVICE_REGISTRY_COMPOSE"
+    )
     
-    if docker compose -f "$DOCKER_APP" down; then
-        echo -e "${GREEN}✓ Application services stopped successfully!${NC}"
-        return 0
-    else
-        echo -e "${RED}✗ Failed to stop application services${NC}"
-        return 1
-    fi
+    for service_info in "${services[@]}"; do
+        IFS=':' read -r service_name service_dir compose_file <<< "$service_info"
+        echo -e "${CYAN}Stopping $service_name...${NC}"
+        cd "$service_dir"
+        if docker compose -f "$compose_file" down; then
+            echo -e "${GREEN}✓ $service_name stopped${NC}"
+        else
+            echo -e "${YELLOW}⚠ $service_name stop failed (may not be running)${NC}"
+        fi
+    done
+    
+    echo -e "${GREEN}✓ Application services stopped successfully!${NC}"
+    return 0
 }
 
 ###############################################################################
@@ -304,35 +350,48 @@ start_service() {
             ;;
         "service-registry")
             echo -e "${CYAN}Starting Service Registry...${NC}"
-            docker compose -f "$DOCKER_APP" up -d service-registry
+            cd "$ROOT_DIR/Microservices/service-registry"
+            docker compose -f "$SERVICE_REGISTRY_COMPOSE" up -d
             ;;
         "api-gateway")
             echo -e "${CYAN}Starting API Gateway...${NC}"
-            docker compose -f "$DOCKER_APP" up -d api-gateway
+            cd "$ROOT_DIR/Microservices/api-gateway"
+            docker compose -f "$API_GATEWAY_COMPOSE" up -d
             ;;
         "notification")
             echo -e "${CYAN}Starting Notification Service...${NC}"
-            docker compose -f "$DOCKER_APP" up -d notification-service
+            cd "$ROOT_DIR/Microservices/notification-service"
+            docker compose -f "$NOTIFICATION_COMPOSE" up -d
             ;;
         "project")
             echo -e "${CYAN}Starting Project Service...${NC}"
-            docker compose -f "$DOCKER_APP" up -d project-service
+            cd "$ROOT_DIR/Microservices/project-service"
+            docker compose -f "$PROJECT_COMPOSE" up -d
             ;;
         "user")
             echo -e "${CYAN}Starting User Service...${NC}"
-            docker compose -f "$DOCKER_APP" up -d user-service
+            cd "$ROOT_DIR/Microservices/user-service"
+            docker compose -f "$USER_COMPOSE" up -d
             ;;
         "paper-search")
             echo -e "${CYAN}Starting Paper Search Service...${NC}"
-            docker compose -f "$DOCKER_APP" up -d paper-search
+            cd "$ROOT_DIR/AI-Agents/paper-search"
+            docker compose -f "$PAPER_SEARCH_COMPOSE" up -d
             ;;
         "extractor")
             echo -e "${CYAN}Starting PDF Extractor Service...${NC}"
-            docker compose -f "$DOCKER_APP" up -d extractor
+            cd "$ROOT_DIR/AI-Agents/extractor"
+            docker compose -f "$EXTRACTOR_COMPOSE" up -d
+            ;;
+        "gap-analyzer")
+            echo -e "${CYAN}Starting Gap Analyzer Service...${NC}"
+            cd "$ROOT_DIR/AI-Agents/gap-analyzer"
+            docker compose -f "$GAP_ANALYZER_COMPOSE" up -d
             ;;
         "frontend")
             echo -e "${CYAN}Starting Frontend...${NC}"
-            docker compose -f "$DOCKER_APP" up -d frontend
+            cd "$ROOT_DIR/Frontend"
+            docker compose -f "$FRONTEND_COMPOSE" up -d
             ;;
         "grobid")
             echo -e "${CYAN}Starting GROBID PDF Extractor...${NC}"
@@ -340,7 +399,7 @@ start_service() {
             ;;
         *)
             echo -e "${RED}Unknown service: $service${NC}"
-            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, frontend, grobid${NC}"
+            echo -e "${YELLOW}Available services: infra, apps, service-registry, api-gateway, notification, project, user, paper-search, extractor, gap-analyzer, frontend, grobid${NC}"
             return 1
             ;;
     esac
@@ -366,51 +425,66 @@ restart_service() {
             ;;
         "service-registry")
             echo -e "${CYAN}Restarting Service Registry (with rebuild)...${NC}"
-            docker compose -f "$DOCKER_APP" stop service-registry
-            docker compose -f "$DOCKER_APP" build service-registry
-            docker compose -f "$DOCKER_APP" up -d service-registry
+            cd "$ROOT_DIR/Microservices/service-registry"
+            docker compose -f "$SERVICE_REGISTRY_COMPOSE" down
+            docker compose -f "$SERVICE_REGISTRY_COMPOSE" build
+            docker compose -f "$SERVICE_REGISTRY_COMPOSE" up -d
             ;;
         "api-gateway")
             echo -e "${CYAN}Restarting API Gateway (with rebuild)...${NC}"
-            docker compose -f "$DOCKER_APP" stop api-gateway
-            docker compose -f "$DOCKER_APP" build api-gateway
-            docker compose -f "$DOCKER_APP" up -d api-gateway
+            cd "$ROOT_DIR/Microservices/api-gateway"
+            docker compose -f "$API_GATEWAY_COMPOSE" down
+            docker compose -f "$API_GATEWAY_COMPOSE" build
+            docker compose -f "$API_GATEWAY_COMPOSE" up -d
             ;;
         "notification")
             echo -e "${CYAN}Restarting Notification Service (with rebuild)...${NC}"
-            docker compose -f "$DOCKER_APP" stop notification-service
-            docker compose -f "$DOCKER_APP" build notification-service
-            docker compose -f "$DOCKER_APP" up -d notification-service
+            cd "$ROOT_DIR/Microservices/notification-service"
+            docker compose -f "$NOTIFICATION_COMPOSE" down
+            docker compose -f "$NOTIFICATION_COMPOSE" build
+            docker compose -f "$NOTIFICATION_COMPOSE" up -d
             ;;
         "project")
             echo -e "${CYAN}Restarting Project Service (with rebuild)...${NC}"
-            docker compose -f "$DOCKER_APP" stop project-service
-            docker compose -f "$DOCKER_APP" build project-service
-            docker compose -f "$DOCKER_APP" up -d project-service
+            cd "$ROOT_DIR/Microservices/project-service"
+            docker compose -f "$PROJECT_COMPOSE" down
+            docker compose -f "$PROJECT_COMPOSE" build
+            docker compose -f "$PROJECT_COMPOSE" up -d
             ;;
         "user")
             echo -e "${CYAN}Restarting User Service (with rebuild)...${NC}"
-            docker compose -f "$DOCKER_APP" stop user-service
-            docker compose -f "$DOCKER_APP" build user-service
-            docker compose -f "$DOCKER_APP" up -d user-service
+            cd "$ROOT_DIR/Microservices/user-service"
+            docker compose -f "$USER_COMPOSE" down
+            docker compose -f "$USER_COMPOSE" build
+            docker compose -f "$USER_COMPOSE" up -d
             ;;
         "paper-search")
             echo -e "${CYAN}Restarting Paper Search Service (with rebuild)...${NC}"
-            docker compose -f "$DOCKER_APP" stop paper-search
-            docker compose -f "$DOCKER_APP" build paper-search
-            docker compose -f "$DOCKER_APP" up -d paper-search
+            cd "$ROOT_DIR/AI-Agents/paper-search"
+            docker compose -f "$PAPER_SEARCH_COMPOSE" down
+            docker compose -f "$PAPER_SEARCH_COMPOSE" build
+            docker compose -f "$PAPER_SEARCH_COMPOSE" up -d
             ;;
         "extractor")
             echo -e "${CYAN}Restarting PDF Extractor Service (with rebuild)...${NC}"
-            docker compose -f "$DOCKER_APP" stop extractor
-            docker compose -f "$DOCKER_APP" build extractor
-            docker compose -f "$DOCKER_APP" up -d extractor
+            cd "$ROOT_DIR/AI-Agents/extractor"
+            docker compose -f "$EXTRACTOR_COMPOSE" down
+            docker compose -f "$EXTRACTOR_COMPOSE" build
+            docker compose -f "$EXTRACTOR_COMPOSE" up -d
+            ;;
+        "gap-analyzer")
+            echo -e "${CYAN}Restarting Gap Analyzer Service (with rebuild)...${NC}"
+            cd "$ROOT_DIR/AI-Agents/gap-analyzer"
+            docker compose -f "$GAP_ANALYZER_COMPOSE" down
+            docker compose -f "$GAP_ANALYZER_COMPOSE" build
+            docker compose -f "$GAP_ANALYZER_COMPOSE" up -d
             ;;
         "frontend")
             echo -e "${CYAN}Restarting Frontend (with rebuild)...${NC}"
-            docker compose -f "$DOCKER_APP" stop frontend
-            docker compose -f "$DOCKER_APP" build frontend
-            docker compose -f "$DOCKER_APP" up -d frontend
+            cd "$ROOT_DIR/Frontend"
+            docker compose -f "$FRONTEND_COMPOSE" down
+            docker compose -f "$FRONTEND_COMPOSE" build
+            docker compose -f "$FRONTEND_COMPOSE" up -d
             ;;
         "grobid")
             echo -e "${CYAN}Restarting GROBID PDF Extractor (with rebuild)...${NC}"
@@ -440,35 +514,48 @@ stop_service() {
             ;;
         "service-registry")
             echo -e "${CYAN}Stopping Service Registry...${NC}"
-            docker compose -f "$DOCKER_APP" stop service-registry
+            cd "$ROOT_DIR/Microservices/service-registry"
+            docker compose -f "$SERVICE_REGISTRY_COMPOSE" down
             ;;
         "api-gateway")
             echo -e "${CYAN}Stopping API Gateway...${NC}"
-            docker compose -f "$DOCKER_APP" stop api-gateway
+            cd "$ROOT_DIR/Microservices/api-gateway"
+            docker compose -f "$API_GATEWAY_COMPOSE" down
             ;;
         "notification")
             echo -e "${CYAN}Stopping Notification Service...${NC}"
-            docker compose -f "$DOCKER_APP" stop notification-service
+            cd "$ROOT_DIR/Microservices/notification-service"
+            docker compose -f "$NOTIFICATION_COMPOSE" down
             ;;
         "project")
             echo -e "${CYAN}Stopping Project Service...${NC}"
-            docker compose -f "$DOCKER_APP" stop project-service
+            cd "$ROOT_DIR/Microservices/project-service"
+            docker compose -f "$PROJECT_COMPOSE" down
             ;;
         "user")
             echo -e "${CYAN}Stopping User Service...${NC}"
-            docker compose -f "$DOCKER_APP" stop user-service
+            cd "$ROOT_DIR/Microservices/user-service"
+            docker compose -f "$USER_COMPOSE" down
             ;;
         "paper-search")
             echo -e "${CYAN}Stopping Paper Search Service...${NC}"
-            docker compose -f "$DOCKER_APP" stop paper-search
+            cd "$ROOT_DIR/AI-Agents/paper-search"
+            docker compose -f "$PAPER_SEARCH_COMPOSE" down
             ;;
         "extractor")
             echo -e "${CYAN}Stopping PDF Extractor Service...${NC}"
-            docker compose -f "$DOCKER_APP" stop extractor
+            cd "$ROOT_DIR/AI-Agents/extractor"
+            docker compose -f "$EXTRACTOR_COMPOSE" down
+            ;;
+        "gap-analyzer")
+            echo -e "${CYAN}Stopping Gap Analyzer Service...${NC}"
+            cd "$ROOT_DIR/AI-Agents/gap-analyzer"
+            docker compose -f "$GAP_ANALYZER_COMPOSE" down
             ;;
         "frontend")
             echo -e "${CYAN}Stopping Frontend...${NC}"
-            docker compose -f "$DOCKER_APP" stop frontend
+            cd "$ROOT_DIR/Frontend"
+            docker compose -f "$FRONTEND_COMPOSE" down
             ;;
         "grobid")
             echo -e "${CYAN}Stopping GROBID PDF Extractor...${NC}"
@@ -508,6 +595,7 @@ start_all() {
     echo -e "${GREEN}• Service Registry:${NC} http://localhost:8761"
     echo -e "${GREEN}• Paper Search Service:${NC} http://localhost:8001"
     echo -e "${GREEN}• PDF Extractor Service:${NC} http://localhost:8002"
+    echo -e "${GREEN}• Gap Analyzer Service:${NC} http://localhost:8003"
     echo -e "${GREEN}• RabbitMQ Management:${NC} http://localhost:15672"
     echo -e "${GREEN}• GROBID PDF Extractor:${NC} http://localhost:8070"
 }
@@ -567,7 +655,24 @@ status() {
     
     # Application status
     echo -e "\n${BLUE}Application Services:${NC}"
-    docker compose -f "$DOCKER_APP" ps
+    local services=(
+        "Service Registry:$ROOT_DIR/Microservices/service-registry:$SERVICE_REGISTRY_COMPOSE"
+        "API Gateway:$ROOT_DIR/Microservices/api-gateway:$API_GATEWAY_COMPOSE"
+        "Notification Service:$ROOT_DIR/Microservices/notification-service:$NOTIFICATION_COMPOSE"
+        "Project Service:$ROOT_DIR/Microservices/project-service:$PROJECT_COMPOSE"
+        "User Service:$ROOT_DIR/Microservices/user-service:$USER_COMPOSE"
+        "Paper Search:$ROOT_DIR/AI-Agents/paper-search:$PAPER_SEARCH_COMPOSE"
+        "PDF Extractor:$ROOT_DIR/AI-Agents/extractor:$EXTRACTOR_COMPOSE"
+        "Gap Analyzer:$ROOT_DIR/AI-Agents/gap-analyzer:$GAP_ANALYZER_COMPOSE"
+        "Frontend:$ROOT_DIR/Frontend:$FRONTEND_COMPOSE"
+    )
+    
+    for service_info in "${services[@]}"; do
+        IFS=':' read -r service_name service_dir compose_file <<< "$service_info"
+        echo -e "\n${CYAN}$service_name:${NC}"
+        cd "$service_dir"
+        docker compose -f "$compose_file" ps
+    done
     
     # Health check status
     echo -e "\n${BLUE}Service Health Status:${NC}"
@@ -578,6 +683,7 @@ status() {
     print_service_status "User Service" "8081"
     print_service_status "Paper Search Service" "8001"
     print_service_status "PDF Extractor Service" "8002"
+    print_service_status "Gap Analyzer Service" "8003"
     print_frontend_status
     
     # Container endpoints
@@ -589,6 +695,8 @@ status() {
     echo -e "${GREEN}• Project Service:${NC} http://localhost:8083"
     echo -e "${GREEN}• User Service:${NC} http://localhost:8081"
     echo -e "${GREEN}• Paper Search Service:${NC} http://localhost:8001"
+    echo -e "${GREEN}• PDF Extractor Service:${NC} http://localhost:8002"
+    echo -e "${GREEN}• Gap Analyzer Service:${NC} http://localhost:8003"
     echo -e "${GREEN}• RabbitMQ Management:${NC} http://localhost:15672"
     echo -e "${GREEN}• GROBID PDF Extractor:${NC} http://localhost:8070"
 }
@@ -609,31 +717,61 @@ logs() {
             docker compose -f "$DOCKER_SERVICES" logs -f
             ;;
         "apps"|"applications")
-            docker compose -f "$DOCKER_APP" logs -f
+            echo -e "${CYAN}Viewing logs for all application services...${NC}"
+            local services=(
+                "Service Registry:$ROOT_DIR/Microservices/service-registry:$SERVICE_REGISTRY_COMPOSE"
+                "API Gateway:$ROOT_DIR/Microservices/api-gateway:$API_GATEWAY_COMPOSE"
+                "Notification Service:$ROOT_DIR/Microservices/notification-service:$NOTIFICATION_COMPOSE"
+                "Project Service:$ROOT_DIR/Microservices/project-service:$PROJECT_COMPOSE"
+                "User Service:$ROOT_DIR/Microservices/user-service:$USER_COMPOSE"
+                "Paper Search:$ROOT_DIR/AI-Agents/paper-search:$PAPER_SEARCH_COMPOSE"
+                "PDF Extractor:$ROOT_DIR/AI-Agents/extractor:$EXTRACTOR_COMPOSE"
+                "Gap Analyzer:$ROOT_DIR/AI-Agents/gap-analyzer:$GAP_ANALYZER_COMPOSE"
+                "Frontend:$ROOT_DIR/Frontend:$FRONTEND_COMPOSE"
+            )
+            
+            for service_info in "${services[@]}"; do
+                IFS=':' read -r service_name service_dir compose_file <<< "$service_info"
+                echo -e "\n${YELLOW}=== $service_name Logs ===${NC}"
+                cd "$service_dir"
+                docker compose -f "$compose_file" logs --tail=50
+            done
             ;;
         "service-registry")
-            docker compose -f "$DOCKER_APP" logs -f service-registry
+            cd "$ROOT_DIR/Microservices/service-registry"
+            docker compose -f "$SERVICE_REGISTRY_COMPOSE" logs -f
             ;;
         "api-gateway")
-            docker compose -f "$DOCKER_APP" logs -f api-gateway
+            cd "$ROOT_DIR/Microservices/api-gateway"
+            docker compose -f "$API_GATEWAY_COMPOSE" logs -f
             ;;
         "notification")
-            docker compose -f "$DOCKER_APP" logs -f notification-service
+            cd "$ROOT_DIR/Microservices/notification-service"
+            docker compose -f "$NOTIFICATION_COMPOSE" logs -f
             ;;
         "project")
-            docker compose -f "$DOCKER_APP" logs -f project-service
+            cd "$ROOT_DIR/Microservices/project-service"
+            docker compose -f "$PROJECT_COMPOSE" logs -f
             ;;
         "user")
-            docker compose -f "$DOCKER_APP" logs -f user-service
+            cd "$ROOT_DIR/Microservices/user-service"
+            docker compose -f "$USER_COMPOSE" logs -f
             ;;
         "paper-search")
-            docker compose -f "$DOCKER_APP" logs -f paper-search
+            cd "$ROOT_DIR/AI-Agents/paper-search"
+            docker compose -f "$PAPER_SEARCH_COMPOSE" logs -f
             ;;
         "extractor")
-            docker compose -f "$DOCKER_APP" logs -f extractor
+            cd "$ROOT_DIR/AI-Agents/extractor"
+            docker compose -f "$EXTRACTOR_COMPOSE" logs -f
+            ;;
+        "gap-analyzer")
+            cd "$ROOT_DIR/AI-Agents/gap-analyzer"
+            docker compose -f "$GAP_ANALYZER_COMPOSE" logs -f
             ;;
         "frontend")
-            docker compose -f "$DOCKER_APP" logs -f frontend
+            cd "$ROOT_DIR/Frontend"
+            docker compose -f "$FRONTEND_COMPOSE" logs -f
             ;;
         "grobid")
             docker compose -f "$DOCKER_SERVICES" logs -f grobid
@@ -653,15 +791,31 @@ build_all() {
     print_header
     print_step "1" "Building all Docker images..."
     
-    cd "$ROOT_DIR"
-    
     # Build infrastructure (if needed)
     echo -e "${CYAN}Building infrastructure images...${NC}"
+    cd "$ROOT_DIR"
     docker compose -f "$DOCKER_SERVICES" build
     
     # Build applications
     echo -e "${CYAN}Building application images...${NC}"
-    docker compose -f "$DOCKER_APP" build
+    local services=(
+        "Service Registry:$ROOT_DIR/Microservices/service-registry:$SERVICE_REGISTRY_COMPOSE"
+        "API Gateway:$ROOT_DIR/Microservices/api-gateway:$API_GATEWAY_COMPOSE"
+        "Notification Service:$ROOT_DIR/Microservices/notification-service:$NOTIFICATION_COMPOSE"
+        "Project Service:$ROOT_DIR/Microservices/project-service:$PROJECT_COMPOSE"
+        "User Service:$ROOT_DIR/Microservices/user-service:$USER_COMPOSE"
+        "Paper Search:$ROOT_DIR/AI-Agents/paper-search:$PAPER_SEARCH_COMPOSE"
+        "PDF Extractor:$ROOT_DIR/AI-Agents/extractor:$EXTRACTOR_COMPOSE"
+        "Gap Analyzer:$ROOT_DIR/AI-Agents/gap-analyzer:$GAP_ANALYZER_COMPOSE"
+        "Frontend:$ROOT_DIR/Frontend:$FRONTEND_COMPOSE"
+    )
+    
+    for service_info in "${services[@]}"; do
+        IFS=':' read -r service_name service_dir compose_file <<< "$service_info"
+        echo -e "${CYAN}Building $service_name...${NC}"
+        cd "$service_dir"
+        docker compose -f "$compose_file" build
+    done
     
     echo -e "${GREEN}✓ All images built successfully!${NC}"
 }
@@ -679,7 +833,26 @@ clean_all() {
         
         # Stop and remove everything
         docker compose -f "$DOCKER_SERVICES" down --rmi all --volumes --remove-orphans
-        docker compose -f "$DOCKER_APP" down --rmi all --volumes --remove-orphans
+        
+        # Clean individual application services
+        local services=(
+            "Service Registry:$ROOT_DIR/Microservices/service-registry:$SERVICE_REGISTRY_COMPOSE"
+            "API Gateway:$ROOT_DIR/Microservices/api-gateway:$API_GATEWAY_COMPOSE"
+            "Notification Service:$ROOT_DIR/Microservices/notification-service:$NOTIFICATION_COMPOSE"
+            "Project Service:$ROOT_DIR/Microservices/project-service:$PROJECT_COMPOSE"
+            "User Service:$ROOT_DIR/Microservices/user-service:$USER_COMPOSE"
+            "Paper Search:$ROOT_DIR/AI-Agents/paper-search:$PAPER_SEARCH_COMPOSE"
+            "PDF Extractor:$ROOT_DIR/AI-Agents/extractor:$EXTRACTOR_COMPOSE"
+            "Gap Analyzer:$ROOT_DIR/AI-Agents/gap-analyzer:$GAP_ANALYZER_COMPOSE"
+            "Frontend:$ROOT_DIR/Frontend:$FRONTEND_COMPOSE"
+        )
+        
+        for service_info in "${services[@]}"; do
+            IFS=':' read -r service_name service_dir compose_file <<< "$service_info"
+            echo -e "${CYAN}Cleaning $service_name...${NC}"
+            cd "$service_dir"
+            docker compose -f "$compose_file" down --rmi all --volumes --remove-orphans
+        done
         
         # Remove dangling images
         docker image prune -f
@@ -731,6 +904,7 @@ show_help() {
     echo -e "  • user             - User Service"
     echo -e "  • paper-search     - Paper Search Service (FastAPI)"
     echo -e "  • extractor        - PDF Extractor Service (FastAPI)"
+    echo -e "  • gap-analyzer     - Gap Analyzer Service (FastAPI)"
     echo -e "  • frontend         - Next.js Frontend"
     echo -e "  • grobid           - GROBID PDF Extractor Service"
     echo ""

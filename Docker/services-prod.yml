@@ -1,0 +1,219 @@
+services:
+  user-postgres:
+    image: postgres:17-alpine
+    container_name: user-db
+    restart: unless-stopped
+    env_file:
+      - /opt/scholarai/envs/infra.env
+    environment:
+      POSTGRES_USER: ${USER_DB_USER}
+      POSTGRES_PASSWORD: ${USER_DB_PASSWORD}
+      POSTGRES_DB: userDB
+    # Keep PG small & predictable
+    command: >
+      postgres
+      -c shared_buffers=128MB
+      -c work_mem=8MB
+      -c maintenance_work_mem=64MB
+      -c effective_cache_size=256MB
+      -c max_connections=40
+      -c wal_compression=on
+      -c autovacuum=on
+      -c autovacuum_naptime=30s
+    ports:
+      - "${USER_DB_PORT}:5432"
+    volumes:
+      - user-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${USER_DB_USER} -d userDB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    stop_grace_period: 30s
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    # Resource caps
+    cpus: 0.5
+    mem_limit: 512m
+    mem_reservation: 256m
+    pids_limit: 256
+    logging:
+      driver: "json-file"
+      options: { max-size: "10m", max-file: "3" }
+    networks:
+      - scholarai-network
+
+  notification-postgres:
+    image: postgres:17-alpine
+    container_name: notification-db
+    restart: unless-stopped
+    env_file:
+      - /opt/scholarai/envs/infra.env
+    environment:
+      POSTGRES_USER: ${NOTIFICATION_DB_USER}
+      POSTGRES_PASSWORD: ${NOTIFICATION_DB_PASSWORD}
+      POSTGRES_DB: notificationDB
+    command: >
+      postgres
+      -c shared_buffers=128MB
+      -c work_mem=8MB
+      -c maintenance_work_mem=64MB
+      -c effective_cache_size=256MB
+      -c max_connections=40
+      -c wal_compression=on
+      -c autovacuum=on
+      -c autovacuum_naptime=30s
+    ports:
+      - "${NOTIFICATION_DB_PORT}:5432"
+    volumes:
+      - notification-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${NOTIFICATION_DB_USER} -d notificationDB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    stop_grace_period: 30s
+    cpus: 0.5
+    mem_limit: 512m
+    mem_reservation: 256m
+    pids_limit: 256
+    ulimits:
+      nofile: { soft: 65536, hard: 65536 }
+    logging:
+      driver: "json-file"
+      options: { max-size: "10m", max-file: "3" }
+    networks:
+      - scholarai-network
+
+  project-postgres:
+    image: postgres:17-alpine
+    container_name: project-db
+    restart: unless-stopped
+    env_file:
+      - /opt/scholarai/envs/infra.env
+    environment:
+      POSTGRES_USER: ${PROJECT_DB_USER}
+      POSTGRES_PASSWORD: ${PROJECT_DB_PASSWORD}
+      POSTGRES_DB: projectDB
+    command: >
+      postgres
+      -c shared_buffers=128MB
+      -c work_mem=8MB
+      -c maintenance_work_mem=64MB
+      -c effective_cache_size=256MB
+      -c max_connections=50
+      -c wal_compression=on
+      -c autovacuum=on
+      -c autovacuum_naptime=30s
+    ports:
+      - "${PROJECT_DB_PORT}:5432"
+    volumes:
+      - project-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PROJECT_DB_USER} -d projectDB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    stop_grace_period: 30s
+    cpus: 0.6
+    mem_limit: 640m
+    mem_reservation: 256m
+    pids_limit: 256
+    ulimits:
+      nofile: { soft: 65536, hard: 65536 }
+    logging:
+      driver: "json-file"
+      options: { max-size: "10m", max-file: "3" }
+    networks:
+      - scholarai-network
+
+  rabbitmq:
+    image: 'rabbitmq:4.1.0-management-alpine'
+    container_name: user-rabbitmq
+    restart: always
+    env_file:
+      - /opt/scholarai/envs/infra.env
+    environment:
+      RABBITMQ_DEFAULT_USER: ${USER_RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${USER_RABBITMQ_PASSWORD}
+    ports:
+      - '${USER_RABBITMQ_AMQP_PORT}:5672'
+      - '${USER_RABBITMQ_MANAGEMENT_PORT}:15672'
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 30s
+      timeout: 30s
+      retries: 10
+    networks:
+      - scholarai-network
+
+  redis:
+    image: redis:8.0.1-alpine
+    container_name: user-redis
+    restart: unless-stopped
+    # Cache mode: no snapshots, no AOF; 256MB cap with LRU eviction
+    command: >
+      redis-server
+      --requirepass ${USER_REDIS_PASSWORD}
+      --save ""
+      --appendonly no
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    env_file:
+      - /opt/scholarai/envs/infra.env
+    environment:
+      REDIS_PASSWORD: ${USER_REDIS_PASSWORD}
+    ports:
+      - "${USER_REDIS_PORT}:6379"
+    volumes:
+      - user-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${USER_REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    cpus: 0.25
+    mem_limit: 300m
+    mem_reservation: 128m
+    pids_limit: 256
+    logging:
+      driver: "json-file"
+      options: { max-size: "10m", max-file: "3" }
+    networks:
+      - scholarai-network
+
+  grobid:
+    build:
+      context: .
+      dockerfile: Dockerfile.grobid
+    container_name: pdf_extractor_grobid
+    restart: unless-stopped
+    ports:
+      - "8070:8070"
+    volumes:
+      - grobid-home:/opt/grobid/grobid-home
+    environment:
+      # Increased memory allocation for better performance
+      JAVA_OPTS: "-Xms1g -Xmx3g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+    cpus: 2.0
+    mem_limit: 3.5g
+    mem_reservation: 1.5g
+    pids_limit: 512  
+    logging:
+      driver: "json-file"
+      options: { max-size: "20m", max-file: "3" }
+    networks:
+      - scholarai-network
+
+volumes:
+  user-redis-data:
+  user-postgres-data:
+  notification-postgres-data:
+  project-postgres-data:
+  grobid-home:
+
+networks:
+  scholarai-network:
+    driver: bridge

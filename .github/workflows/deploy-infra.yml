@@ -1,0 +1,67 @@
+# .github/workflows/deploy-infra.yml
+name: Deploy Infra
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Docker/services-prod.yml'
+      - 'Docker/Dockerfile.grobid'
+      - '.github/workflows/deploy-infra.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Ensure Docker folder exists on VM
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "mkdir -p /opt/scholarai/Docker"
+
+      - name: Copy compose + Dockerfile to VM
+        run: |
+          # Copy compose & grobid Dockerfile to VM inside Docker/
+          scp -o StrictHostKeyChecking=no Docker/services-prod.yml \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/opt/scholarai/Docker/services-prod.yml
+          scp -o StrictHostKeyChecking=no Docker/Dockerfile.grobid \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/opt/scholarai/Docker/Dockerfile.grobid
+
+      - name: Deploy infra on VM
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+            set -e
+            cd /opt/scholarai/Docker
+
+            echo "🧹 Cleaning up old containers..."
+            docker compose -f services-prod.yml down || true
+
+            echo "🚀 Starting infra deployment..."
+            docker compose -f services-prod.yml --env-file /opt/scholarai/envs/infra.env pull
+            docker compose -f services-prod.yml --env-file /opt/scholarai/envs/infra.env up -d --remove-orphans
+
+            echo "⏳ Waiting for services to become healthy..."
+            for i in {1..30}; do
+              unhealthy=$(docker ps --format '{{.Names}} {{.Status}}' | grep -v healthy || true)
+              if [ -z "$unhealthy" ]; then
+                echo "✅ All services are healthy!"
+                break
+              fi
+              echo "Still waiting... ($i/30)"
+              sleep 5
+            done
+
+            echo "📊 Service status:"
+            docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+
+            echo "🧹 Cleaning up dangling images..."
+            docker image prune -af || true
+          EOF
