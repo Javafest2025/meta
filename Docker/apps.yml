@@ -240,11 +240,11 @@ services:
     networks:
       - scholarai-network
     cpus: 0.75
-    mem_limit: 768m
-    mem_reservation: 512m
-    memswap_limit: 1g
+    mem_limit: 2g
+    mem_reservation: 1.5g
+    memswap_limit: 2g
     pids_limit: 128
-    shm_size: "128m"
+    shm_size: "512m"
     ulimits:
       nofile:
         soft: 16384
