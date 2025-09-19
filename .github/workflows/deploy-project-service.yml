@@ -29,9 +29,11 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
             "mkdir -p /opt/scholarai/Microservices/project-service"
 
-      - name: Copy project-service (incl. hidden files) to VM
+      - name: Sync only modified files to VM
         run: |
-          scp -o StrictHostKeyChecking=no -r Microservices/project-service/. \
+          rsync -avz --delete --exclude='target/' --exclude='*.log' --exclude='logs/' \
+            -e "ssh -o StrictHostKeyChecking=no" \
+            Microservices/project-service/ \
             ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/opt/scholarai/Microservices/project-service/
 
       - name: Deploy Project Service
