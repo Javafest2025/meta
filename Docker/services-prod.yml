@@ -196,7 +196,7 @@ services:
       - grobid-home:/opt/grobid/grobid-home
     environment:
       # Increased memory allocation for better performance
-      JAVA_OPTS: "-Xms1g -Xmx3g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+      JAVA_OPTS: "-Xms1g -Xmx3g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:-UseContainerSupport"
     cpus: 2.0
     mem_limit: 3.5g
     mem_reservation: 1.5g
