@@ -75,7 +75,7 @@ jobs:
             done
 
             if [ $healthy -eq 0 ]; then
-              echo "❌ Frontend failed to become healthy!"
+              echo "❌ Frontend failed to become healthy!!!!"
               docker logs scholar-frontend || true
               exit 1
             fi
